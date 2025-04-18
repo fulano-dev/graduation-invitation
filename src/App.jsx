@@ -22,6 +22,8 @@ import MainContent from '@/pages/MainContent';
 import LandingPage from '@/pages/LandingPage';
 import { Helmet, HelmetProvider } from 'react-helmet-async';
 import config from '@/config/config';
+import fotoVertical from '@/photos/foto-background.jpeg';
+import fotoHorizontal from '@/photos/foto-background-horizontal.JPG';
 
 /**
  * App component serves as the root of the application.
@@ -43,14 +45,14 @@ import config from '@/config/config';
  */
 function App() {
   const [isInvitationOpen, setIsInvitationOpen] = useState(false);
-  const [backgroundImage, setBackgroundImage] = useState("/src/photos/foto-background.jpeg");
+  const [backgroundImage, setBackgroundImage] = useState(fotoVertical);
   
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth >= 768) {
-        setBackgroundImage("/src/photos/foto-background-horizontal.JPG");
+        setBackgroundImage(fotoHorizontal);
       } else {
-        setBackgroundImage("/src/photos/foto-background.jpeg");
+        setBackgroundImage(fotoVertical);
       }
     };
     handleResize(); // Run on mount
