@@ -38,7 +38,7 @@ export default function Gifts() {
                         initial={{ opacity: 0, y: 10 }}
                         animate={hasAnimated ? { opacity: 1, y: 0 } : {}}
                         transition={{ delay: 0.2 }}
-                        className="inline-block text-yellow-600 font-medium"
+                        className="inline-block text-[#CFAA93] font-['TexGyreTermes']"
                     >
                         Contamos com você
                     </motion.span>
@@ -47,7 +47,7 @@ export default function Gifts() {
                         initial={{ opacity: 0, y: 20 }}
                         animate={hasAnimated ? { opacity: 1, y: 0 } : {}}
                         transition={{ delay: 0.3 }}
-                        className="text-4xl md:text-5xl font-serif text-gray-800"
+                        className="text-4xl md:text-5xl font-['Alex_Brush'] text-[#CFAA93]"
                     >
                         Confirmar Presença
                     </motion.h2>
@@ -59,9 +59,9 @@ export default function Gifts() {
                         transition={{ delay: 0.4 }}
                         className="flex items-center justify-center gap-4 pt-4"
                     >
-                        <div className="h-[1px] w-12 bg-yellow-200" />
-                        <Gift className="w-5 h-5 text-yellow-500" />
-                        <div className="h-[1px] w-12 bg-yellow-200" />
+                        <div className="h-[1px] w-12 bg-[#CFAA93]/50" />
+                        <Gift className="w-5 h-5 text-[#CFAA93]" />
+                        <div className="h-[1px] w-12 bg-[#CFAA93]/50" />
                     </motion.div>
 
                     {/* Mensagem principal */}
@@ -72,19 +72,9 @@ export default function Gifts() {
                         className="space-y-4 max-w-md mx-auto"
                     >
 
-                        <p className="text-gray-600 leading-relaxed">
+                        <p className="text-[#CFAA93] font-['TexGyreTermes'] leading-relaxed">
                         Nossa celebração será intimista, com as pessoas que mais amamos e você é uma delas!!
 </p>
-<p className="text-gray-600 leading-relaxed">A sua presença é muito importante para nós, abrimos mão de presentes, porém contamos com uma “ajudinha”, para tornar tudo possível.
-                        </p>
-
-                        <div className="space-y-2">
-                            <p className="leading-relaxed text-gray-800">
-                                R$200,00                            </p>
-                            <p className="text-gray-600 italic text-sm">
-                                O valor do jantar é individual.
-                            </p>
-                        </div>
                     </motion.div>
 
                     <motion.div
@@ -93,63 +83,12 @@ export default function Gifts() {
                         transition={{ delay: 0.6 }}
                         className="flex items-center justify-center gap-3 pt-4"
                     >
-                        <div className="h-px w-8 bg-yellow-200/50" />
-                        <div className="w-1.5 h-1.5 rounded-full bg-yellow-300" />
-                        <div className="h-px w-8 bg-yellow-200/50" />
+                        <div className="h-px w-8 bg-[#CFAA93]/50" />
+                        <div className="w-1.5 h-1.5 rounded-full bg-[#CFAA93]" />
+                        <div className="h-px w-8 bg-[#CFAA93]/50" />
                     </motion.div>
                 </motion.div>
-                
 
-                {/* Lista de contas bancárias */}
-                <div className="max-w-2xl mx-auto grid gap-6">
-                    {config.data.banks.map((account, index) => (
-                        <motion.div
-                            key={account.accountNumber}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={hasAnimated ? { opacity: 1, y: 0 } : {}}
-                            transition={{ delay: 0.2 * index + 0.7 }}
-                            className="relative group"
-                        >
-                            <div className="absolute inset-0 bg-gradient-to-r from-yellow-100/50 to-yellow-200/50 rounded-2xl transform transition-transform group-hover:scale-105 duration-300" />
-                            <div className="relative backdrop-blur-sm bg-white/80 p-6 rounded-2xl border border-yellow-100/50 shadow-lg">
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center space-x-4">
-                                        <div className="w-12 h-12 rounded-lg bg-white p-2 shadow-sm">
-                                            <Building2 className="w-full h-full text-yellow-600" />
-                                        </div>
-                                        <div>
-                                            <h3 className="font-medium text-gray-800">{account.bank}</h3>
-                                            <p className="text-sm text-gray-500">{account.accountName}</p>
-                                        </div>
-                                    </div>
-                                    <Wallet className="w-5 h-5 text-yellow-500" />
-                                </div>
-
-                                <div className="mt-4">
-                                    <div className="flex items-center justify-between bg-gray-50/80 px-4 py-3 rounded-lg">
-                                        <p className="font-mono text-gray-700">{account.description}</p>
-                                        <motion.button
-                                            whileHover={{ scale: 1.05 }}
-                                            whileTap={{ scale: 0.95 }}
-                                            onClick={() => copyToClipboard(account.accountNumber, account.bank)}
-                                            className="flex items-center space-x-1 text-yellow-600 hover:text-yellow-600"
-                                        >
-                                            {copiedAccount === account.bank ? (
-                                                <CheckCircle className="w-4 h-4" />
-                                            ) : (
-                                                <Copy className="w-4 h-4" />
-                                            )}
-                                            <span className="text-sm">
-                                                {copiedAccount === account.bank ? 'Copiado!' : 'Copiar'}
-                                            </span>
-                                        </motion.button>
-                                    </div>
-                                </div>
-                            </div>
-                        </motion.div>
-                    ))}
-                </div>
-                
             </div>
             
             

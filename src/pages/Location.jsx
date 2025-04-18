@@ -21,9 +21,9 @@ export default function Location() {
                         whileInView={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.2 }}
                         viewport={{ once: true }}
-                        className="inline-block text-yellow-600 font-medium"
+                        className="inline-block text-[#CFAA93] font-['TexGyreTermes']"
                     >
-                        Local do Evento
+                        Local da Recepção
                     </motion.span>
 
                     <motion.h2
@@ -31,9 +31,9 @@ export default function Location() {
                         whileInView={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.3 }}
                         viewport={{ once: true }}
-                        className="text-4xl md:text-5xl font-serif text-gray-800"
+                        className="text-4xl md:text-5xl font-['Alex_Brush'] text-[#CFAA93]"
                     >
-                        Local
+                        Maria Horos Buffet
                     </motion.h2>
 
                     {/* Decorative Divider */}
@@ -44,9 +44,9 @@ export default function Location() {
                         viewport={{ once: true }}
                         className="flex items-center justify-center gap-4 pt-4"
                     >
-                        <div className="h-[1px] w-12 bg-yellow-200" />
-                        <MapPin className="w-5 h-5 text-yellow-500" />
-                        <div className="h-[1px] w-12 bg-yellow-200" />
+                        <div className="h-[1px] w-12 bg-[#CFAA93]/50" />
+                        <MapPin className="w-5 h-5 text-[#CFAA93]" />
+                        <div className="h-[1px] w-12 bg-[#CFAA93]/50" />
                     </motion.div>
                 </motion.div>
 
@@ -58,7 +58,7 @@ export default function Location() {
                         whileInView={{ opacity: 1, x: 0 }}
                         transition={{ duration: 0.8 }}
                         viewport={{ once: true }}
-                        className="w-full h-[400px] rounded-2xl overflow-hidden shadow-lg border-8 border-white"
+                        className="w-full h-[400px] rounded-2xl overflow-hidden shadow-lg border-8 border-[#CFAA93]"
                     >
                         <iframe
                             src={config.data.maps_embed}
@@ -80,23 +80,23 @@ export default function Location() {
                         viewport={{ once: true }}
                         className="space-y-6"
                     >
-                        <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-100">
-                            <h3 className="text-2xl font-serif text-gray-800 mb-6">{config.data.location}</h3>
+                        <div className="bg-white/10 backdrop-blur-md rounded-2xl p-8 shadow-lg border border-[#CFAA93]">
+                            <h3 className="text-2xl font-['TexGyreTermes'] text-[#CFAA93] mb-6">{config.data.location}</h3>
 
                             <div className="space-y-4">
                                 <div className="flex items-start space-x-4">
-                                    <MapPin className="w-5 h-5 text-yellow-600 mt-1" />
-                                    <p className="text-gray-600 flex-1">{config.data.address}</p>
+                                    <MapPin className="w-5 h-5 text-[#CFAA93] mt-1" />
+                                    <p className="text-[#CFAA93] font-['TexGyreTermes'] flex-1">{config.data.address}</p>
                                 </div>
 
                                 <div className="flex items-center space-x-4">
-                                    <CalendarCheck className="w-5 h-5 text-yellow-600" />
-                                    <p className="text-gray-600">{formatEventDate(config.data.date)}</p>
+                                    <CalendarCheck className="w-5 h-5 text-[#CFAA93]" />
+                                    <p className="text-[#CFAA93] font-['TexGyreTermes']">{formatEventDate(config.data.date)}</p>
                                 </div>
 
                                 <div className="flex items-center space-x-4">
-                                    <Clock className="w-5 h-5 text-yellow-600" />
-                                    <p className="text-gray-600">{config.data.time}</p>
+                                    <Clock className="w-5 h-5 text-[#CFAA93]" />
+                                    <p className="text-[#CFAA93] font-['TexGyreTermes']">{config.data.time}</p>
                                 </div>
 
                                 {/* Action Button - Full Width */}
@@ -108,7 +108,7 @@ export default function Location() {
                                         whileHover={{ scale: 1.02 }}
                                         whileTap={{ scale: 0.98 }}
                                         viewport={{ once: true }}
-                                        className="w-full flex items-center justify-center gap-1.5 bg-white text-gray-600 px-4 py-2 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors text-sm"
+                                        className="w-full flex items-center justify-center gap-1.5 bg-white/10 backdrop-blur-md text-[#CFAA93] font-['TexGyreTermes'] px-4 py-2 rounded-lg border border-[#CFAA93]/50 hover:bg-white/20 transition-colors text-sm"
                                     >
                                         <ExternalLink className="w-3.5 h-3.5" />
                                         <span className="font-semibold">Ver Mapa</span>

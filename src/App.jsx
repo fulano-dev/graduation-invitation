@@ -15,7 +15,7 @@
  */
 
 // src/App.jsx
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import Layout from '@/components/Layout';
 import MainContent from '@/pages/MainContent';
@@ -43,6 +43,20 @@ import config from '@/config/config';
  */
 function App() {
   const [isInvitationOpen, setIsInvitationOpen] = useState(false);
+  const [backgroundImage, setBackgroundImage] = useState("/src/photos/foto-background.jpeg");
+  
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 768) {
+        setBackgroundImage("/src/photos/foto-background-horizontal.JPG");
+      } else {
+        setBackgroundImage("/src/photos/foto-background.jpeg");
+      }
+    };
+    handleResize(); // Run on mount
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
   return (
     <HelmetProvider>
       <Helmet>
@@ -75,27 +89,22 @@ function App() {
 
       <AnimatePresence mode='wait'>
         {!isInvitationOpen ? (
-          <LandingPage onOpenInvitation={() => setIsInvitationOpen(true)} />
+          <div
+            className="relative min-h-screen bg-cover bg-top bg-no-repeat"
+            style={{ backgroundImage: `url('${backgroundImage}')` }}
+          >
+            <div className="absolute inset-0 bg-black/60 z-0" />
+            <div className="relative z-10">
+              <LandingPage onOpenInvitation={() => setIsInvitationOpen(true)} />
+            </div>
+          </div>
         ) : (
           <Layout>
             <MainContent />
           </Layout>
         )}
       </AnimatePresence>
-      {!isInvitationOpen ? (<footer className="text-center text-xs text-gray-500 mt-12 pb-6">
-  Desenvolvido com <span className="text-red-400">❤</span> por 
-  <a href="https://linkedin.com/in/joaopedrovsilva" className="text-blue-500 hover:underline mx-1" target="_blank" rel="noopener noreferrer">
-    João Pedro Vargas
-  </a>
-  e 
-  <a href="https://www.linkedin.com/in/guilherme-mocelin-5a6ba3320/" className="text-blue-500 hover:underline mx-1" target="_blank" rel="noopener noreferrer">
-    Guilherme Mocelin
-  </a>.
-  <br/> Exclusivamente para nossos amigos e afilhados Carol & Marcelo.
-  <br />
-  © 2025 Purple Labs - Engenharia de Software I.S · CNPJ 60.272.060/0001-95 · Todos os direitos reservados.
-</footer>
-) : (<div></div>)}
+
     </HelmetProvider>
   );
 }

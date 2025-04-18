@@ -1,7 +1,7 @@
 import EventCards from '@/components/EventsCard'
 import config from '@/config/config'
 import { motion } from 'framer-motion'
-import { Heart } from 'lucide-react'
+import { GraduationCap } from 'lucide-react'
 
 export default function Events() {
     return (
@@ -28,9 +28,9 @@ export default function Events() {
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true }}
                             transition={{ delay: 0.2 }}
-                            className="inline-block text-yellow-600 font-medium mb-2"
+                            className="inline-block text-[#CFAA93] font-['TexGyreTermes'] mb-2"
                         >
-                            Esperamos por você
+                            Espero por você!
                         </motion.span>
 
                         <motion.h2
@@ -38,7 +38,7 @@ export default function Events() {
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true }}
                             transition={{ delay: 0.3 }}
-                            className="text-4xl md:text-5xl font-serif text-gray-800 leading-tight"
+                            className="text-6xl md:text-5xl font-['Alex_Brush'] text-[#CFAA93] leading-tight"
                         >
                             Informações
                         </motion.h2>
@@ -48,9 +48,9 @@ export default function Events() {
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true }}
                             transition={{ delay: 0.2 }}
-                            className="inline-block text-yellow-600 font-medium mb-2"
+                            className="inline-block text-[#CFAA93] font-['TexGyreTermes'] mb-2 text-[25px]"
                         >
-                            Traje: Esporte Fino
+                            Traje Passeio Completo
                         </motion.span>
 
                         {/* Linha decorativa */}
@@ -61,12 +61,21 @@ export default function Events() {
                             transition={{ delay: 0.5 }}
                             className="flex items-center justify-center gap-4 mt-6"
                         >
-                            <div className="h-[1px] w-12 bg-yellow-200" />
-                            <div className="text-yellow-500">
-                                <Heart className="w-4 h-4" fill="currentColor" />
+                            <div className="h-[1px] w-12 bg-[#CFAA93]" />
+                            <div className="text-[#CFAA93]">
+                                <GraduationCap className="w-4 h-4" />
                             </div>
-                            <div className="h-[1px] w-12 bg-rose-200" />
+                            <div className="h-[1px] w-12 bg-[#CFAA93]" />
                         </motion.div>
+                        <motion.span
+                            initial={{ opacity: 0, y: 10 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ delay: 0.2 }}
+                            className="inline-block text-[#CFAA93] font-['TexGyreTermes'] mb-2 text-[20px]"
+                        >
+                            Confirme presença na recepção até 30/07/2025
+                        </motion.span>
                     </motion.div>
 
                     {/* Grade de Eventos */}
@@ -77,6 +86,7 @@ export default function Events() {
                         transition={{ duration: 0.8, delay: 0.6 }}
                         className="max-w-2xl mx-auto"
                     >
+                        
                         <EventCards events={config.data.agenda} />
                     </motion.div>
                 </motion.div>

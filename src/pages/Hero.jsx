@@ -12,7 +12,7 @@ const images = [foto1, foto2, foto3];
 
 export default function Hero() {
     const [guestName, setGuestName] = useState('');
-    const [mainEmoji, setMainEmoji] = useState("🌻");
+    const [mainEmoji, setMainEmoji] = useState("🎓");
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
     useEffect(() => {
@@ -32,7 +32,7 @@ export default function Hero() {
     }, []);
 
     useEffect(() => {
-        const sequence = ["🌻", "💛"];
+        const sequence = ["🎓", "🎓"];
         let index = 0;
         const interval = setInterval(() => {
             index = (index + 1) % sequence.length;
@@ -69,13 +69,12 @@ export default function Hero() {
                 {Object.keys(timeLeft).map((interval) => (
                     <div
                         key={interval}
-                        className="flex flex-col items-center p-3 bg-white/80 backdrop-blur-sm rounded-xl border border-yellow-100 transition-all duration-500"
+                        className="flex flex-col items-center p-3 bg-[#6B4C3B] rounded-xl border border-[#6B4C3B] transition-all duration-500"
                     >
-                        
-                        <span className="text-xl sm:text-2xl font-bold text-yellow-600">
+                        <span className="text-xl sm:text-2xl font-['TexGyreTermes'] font-bold text-white">
                             {timeLeft[interval]}
                         </span>
-                        <span className="text-xs text-gray-500 capitalize">{interval}</span>
+                        <span className="text-xs text-white capitalize font-['TexGyreTermes']">{interval}</span>
                     </div>
                 ))}
             </div>
@@ -109,9 +108,9 @@ export default function Hero() {
                         className="absolute"
                     >
                         <Heart
-                            className={`w-${Math.floor(Math.random() * 2) + 8} h-${Math.floor(Math.random() * 2) + 8} ${i % 3 === 0 ? 'text-yellow-500' :
-                                i % 3 === 1 ? 'text-yellow-400' :
-                                    'text-yellow-300'
+                            className={`w-${Math.floor(Math.random() * 2) + 8} h-${Math.floor(Math.random() * 2) + 8} ${i % 3 === 0 ? 'text-[#CFAA93]' :
+                                i % 3 === 1 ? 'text-[#CFAA93]' :
+                                    'text-[#CFAA93]'
                                 }`}
                             fill="currentColor"
                         />
@@ -131,8 +130,8 @@ export default function Hero() {
             <section id="home" className="min-h-screen flex flex-col items-center justify-center px-4 py-16 sm:py-20 text-center relative overflow-hidden">
                 {import.meta.env.VITE_AMBIENTE === 'HML' && (
                     <div className="bg-red-600 text-white text-center py-4 px-4 mb-6 shadow-md w-full">
-                        <h2 className="text-lg sm:text-2xl font-bold uppercase">AMBIENTE DE HOMOLOGAÇÃO</h2>
-                        <p className="text-xs sm:text-sm mt-1">
+                        <h2 className="text-lg sm:text-2xl font-['TexGyreTermes'] font-bold uppercase">AMBIENTE DE HOMOLOGAÇÃO</h2>
+                        <p className="text-xs sm:text-sm mt-1 font-['TexGyreTermes']">
                           Esta página é destinada apenas para testes. As confirmações feitas aqui não afetarão a lista oficial de convidados.
                         </p>
                     </div>
@@ -143,30 +142,17 @@ export default function Hero() {
                     transition={{ duration: 0.8 }}
                     className="space-y-6 relative z-10"
                 >
+                    <img src="/src/photos/logo-puc.png" alt="Logo PUC" className="h-16 sm:h-20 mx-auto mb-4" />
                     <motion.h2
                             initial={{ scale: 0.8, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
                             transition={{ delay: 0.6 }}
-                            className="text-3xl sm:text-5xl font-serif bg-clip-text text-transparent bg-gradient-to-r from-yellow-600 to-yellow-500"
+                            className="text-4xl sm:text-5xl font-['Alex_Brush'] text-[#CFAA93]"
                         >
-                            {config.data.groomName} & {config.data.brideName}
+                            João Pedro Vargas da Silva
                         </motion.h2>
                         
-                        <motion.div
-                          animate={{ y: [0, -5, 0] }}
-                          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                        >
-                          <motion.span
-                            key={mainEmoji}
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            transition={{ duration: 0.5 }}
-                            className="text-4xl"
-                          >
-                            {mainEmoji}
-                          </motion.span>
-                        </motion.div>
+                        
 
                     <div className="space-y-4">
                     <motion.div
@@ -174,37 +160,41 @@ export default function Hero() {
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true }}
                             transition={{ delay: 0.4 }}
-                            className="text-gray-500 max-w-md mx-auto space-y-2"
+                            className="text-[#CFAA93] max-w-md mx-auto space-y-2 font-['TexGyreTermes']"
                         >
-                            <p className="text-center">
-                                “Quanto à promessa que fizemos um ao outro, o Senhor é testemunha para sempre.”
+                      <p className="text-center font-['TexGyreTermes'] text-[#CFAA93] text-[11px]">
+                            E SUA FAMÍLIA SENTEM-SE HONRADOS EM CONVIDÁ-LOS PARA A RECEPÇÃO DE SUA FORMATURA EM
                             </p>
-                            <p className="text-center text-sm text-gray-400">
-                                1 Sm. 20:23
-                            </p>
+                            
                         </motion.div>
-                        
-                        
+                        <motion.h2
+                            initial={{ scale: 0.8, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            transition={{ delay: 0.6 }}
+                            className="text-2xl sm:text-5xl font-['Alex_Brush'] text-[28px] text-[#CFAA93]"
+                        >
+                            Análise e Desenvolvimento de Sistemas
+                        </motion.h2>
 
                         <div className="relative flex justify-center mt-8">
                         <motion.img
                             key={currentImageIndex}
                             src={images[currentImageIndex]}
-                            alt="Foto do casal"
+                            alt="Foto do formando"
                             initial={{ opacity: 0, scale: 0.98 }}
                             animate={{ opacity: 1, scale: 1 }}
                             exit={{ opacity: 0, scale: 0.98 }}
-                        transition={{ duration: 2, ease: "easeInOut" }}
-                            className="w-full max-w-2xl h-auto rounded-xl object-cover shadow-md border-4 border-yellow-200"
+                            transition={{ duration: 2, ease: "easeInOut" }}
+                            className="w-full max-w-2xl h-auto rounded-xl object-cover shadow-md border-4 border-[#CFAA93]"
                           />
                         </div>
-<motion.p
+                        <motion.p
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             transition={{ delay: 0.4 }}
-                            className="text-gray-500 font-light italic text-base sm:text-lg"
+                            className="text-[#CFAA93] font-['TexGyreTermes'] font-light italic text-base sm:text-lg"
                         >
-                            Nós vamos nos casar!
+                           Quero comemorar esta conquista com você!
                         </motion.p>
                         <CountdownTimer targetDate={config.data.date} />
                         
@@ -216,8 +206,8 @@ export default function Hero() {
                         transition={{ delay: 0.2 }}
                         className="inline-block mx-auto"
                     >
-                        <span className="px-4 py-1 text-sm bg-yellow-50 text-yellow-600 rounded-full border border-yellow-200">
-                            #SaveTheDate 🌻
+                        <span className="px-4 py-1 text-sm bg-[#6B4C3B] text-[#FFF] rounded-full border border-[#6B4C3B]">
+                            #SaveTheDate 🎓
                         </span>
                     </motion.div>
 
@@ -227,11 +217,11 @@ export default function Hero() {
                         transition={{ delay: 0.8 }}
                         className="relative max-w-md mx-auto"
                     >
-                        <div className="absolute inset-0 bg-gradient-to-b from-yellow-50/50 to-white/50 backdrop-blur-md rounded-2xl" />
+                        <div className="absolute inset-0 rounded-2xl" />
 
-                        <div className="relative px-4 sm:px-8 py-8 sm:py-10 rounded-2xl border border-yellow-100/50">
+                        <div className="relative px-4 sm:px-8 py-8 sm:py-10 rounded-2xl border border-[#CFAA93]/50">
                             <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-px">
-                                <div className="w-20 sm:w-32 h-[2px] bg-gradient-to-r from-transparent via-yellow-200 to-transparent" />
+                                <div className="w-20 sm:w-32 h-[2px] bg-gradient-to-r from-transparent via-[#CFAA93] to-transparent" />
                             </div>
 
                             <div className="space-y-6 text-center">
@@ -242,8 +232,8 @@ export default function Hero() {
                                         transition={{ delay: 0.9 }}
                                         className="flex items-center justify-center space-x-2"
                                     >
-                                        <Calendar className="w-4 h-4 text-yellow-500" />
-                                        <span className="text-gray-700 font-medium text-sm sm:text-base">
+                                        <Calendar className="w-4 h-4 text-[#CFAA93]" />
+                                        <span className="text-[#CFAA93] font-['TexGyreTermes'] font-medium text-sm sm:text-base">
                                             {formatEventDate(config.data.date, "full")}
                                         </span>
                                     </motion.div>
@@ -254,17 +244,17 @@ export default function Hero() {
                                         transition={{ delay: 1 }}
                                         className="flex items-center justify-center space-x-2"
                                     >
-                                        <Clock className="w-4 h-4 text-yellow-500" />
-                                        <span className="text-gray-700 font-medium text-sm sm:text-base">
+                                        <Clock className="w-4 h-4 text-[#CFAA93]" />
+                                        <span className="text-[#CFAA93] font-['TexGyreTermes'] font-medium text-sm sm:text-base">
                                             {config.data.time}
                                         </span>
                                     </motion.div>
                                 </div>
 
                                 <div className="flex items-center justify-center gap-3">
-                                    <div className="h-px w-8 sm:w-12 bg-yellow-200/50" />
-                                    <div className="w-2 h-2 rounded-full bg-yellow-200" />
-                                    <div className="h-px w-8 sm:w-12 bg-yellow-200/50" />
+                                    <div className="h-px w-8 sm:w-12 bg-[#CFAA93]/50" />
+                                    <div className="w-2 h-2 rounded-full bg-[#CFAA93]" />
+                                    <div className="h-px w-8 sm:w-12 bg-[#CFAA93]/50" />
                                 </div>
 
                                 <motion.div
@@ -273,41 +263,23 @@ export default function Hero() {
                                     transition={{ delay: 1.1 }}
                                     className="space-y-2"
                                 >
-                                        <p className="text-gray-500 font-serif italic text-sm">
-                                            Querido(a) 🌻
+                                        <p className="text-[#CFAA93] font-['TexGyreTermes'] font-serif italic text-sm">
+                                            Convidado:
                                         </p>
-                                        <p className="text-yellow-600 font-semibold text-2xl sm:text-3xl">
+                                        <p className="text-[#CFAA93] font-['TexGyreTermes'] font-semibold text-2xl sm:text-3xl">
                                             {guestName ? guestName : "Convidado"}
                                         </p>
                                 </motion.div>
                             </div>
 
                             <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-px">
-                                <div className="w-20 sm:w-32 h-[2px] bg-gradient-to-r from-transparent via-yellow-200 to-transparent" />
+                                <div className="w-20 sm:w-32 h-[2px] bg-gradient-to-r from-transparent via-[#CFAA93] to-transparent" />
                             </div>
                         </div>
 
-                        <div className="absolute -top-2 -right-2 w-16 sm:w-24 h-16 sm:h-24 bg-yellow-100/20 rounded-full blur-xl" />
-                        <div className="absolute -bottom-2 -left-2 w-16 sm:w-24 h-16 sm:h-24 bg-yellow-100/20 rounded-full blur-xl" />
-                    </motion.div>
-
-
-                    <div className="pt-6 relative">
-                        <FloatingHearts />
-                        <motion.div
-                            animate={{
-                                scale: [1, 1.1, 1],
-                                rotate: [0, 5, -5, 0]
-                            }}
-                            transition={{
-                                duration: 2,
-                                repeat: Infinity,
-                                ease: "easeInOut"
-                            }}
-                        >
-                            <Heart className="w-10 sm:w-12 h-10 sm:h-12 text-yellow-500 mx-auto" fill="currentColor" />
-                        </motion.div>
-                    </div>
+                        <div className="absolute -top-2 -right-2 w-16 sm:w-24 h-16 sm:h-24 bg-[#CFAA93]/20 rounded-full blur-xl" />
+                        <div className="absolute -bottom-2 -left-2 w-16 sm:w-24 h-16 sm:h-24 bg-[#CFAA93]/20 rounded-full blur-xl" />
+                    </motion.div>   
                 </motion.div>
             </section>
         </>
