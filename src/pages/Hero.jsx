@@ -7,6 +7,7 @@ import { Helmet } from 'react-helmet'; // Adicionado para preload das imagens
 import foto1 from '../photos/foto1.JPG';
 import foto2 from '../photos/foto4.JPG';
 import foto3 from '../photos/foto5.JPG';
+import logoPUC from '../photos/logo-puc.png';
 
 const images = [foto1, foto2, foto3];
 
@@ -142,7 +143,7 @@ export default function Hero() {
                     transition={{ duration: 0.8 }}
                     className="space-y-6 relative z-10"
                 >
-                    <img src="/src/photos/logo-puc.png" alt="Logo PUC" className="h-16 sm:h-20 mx-auto mb-4" />
+                    <img src={logoPUC} alt="Logo PUC" className="h-16 sm:h-20 mx-auto mb-4" />
                     <motion.h2
                             initial={{ scale: 0.8, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
