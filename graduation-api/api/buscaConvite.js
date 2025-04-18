@@ -3,6 +3,14 @@
 import { db } from './db'; // ajuste o caminho para sua instância de conexão com o banco, ex: mysql2
 
 export default async function handler(req, res) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', '*');
+  
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
   const { codigoConvite } = req.method === 'POST' ? req.body : req.query;
 
   if (!codigoConvite) {

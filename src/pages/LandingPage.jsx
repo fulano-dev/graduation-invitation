@@ -8,10 +8,26 @@ import { motion } from 'framer-motion';
 const LandingPage = ({ onOpenInvitation }) => {
   const [code, setCode] = useState('');
 
-  const handleEnter = () => {
+  const handleEnter = async () => {
     if (code.length === 4) {
-      // Aqui futuramente será feita uma requisição ao backend
-      onOpenInvitation();
+      try {
+        const response = await fetch('https://graduation-api-jet.vercel.app/api/buscaConvite', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ codigoConvite: code })
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.convidados && data.convidados.length > 0) {
+          onOpenInvitation();
+        } else {
+          alert('Código incorreto. Dica: o código são os 4 últimos dígitos do telefone de um dos familiares convidados.');
+        }
+      } catch (error) {
+        console.error('Erro ao validar código:', error);
+        alert('Erro ao validar o código. Tente novamente mais tarde.');
+      }
     } else {
       alert('Por favor, digite um código válido de 4 dígitos.');
     }
