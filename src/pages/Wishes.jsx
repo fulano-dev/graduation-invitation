@@ -10,7 +10,7 @@ const Wishes = ({ convidados = [] }) => {
     <div>
       {/* Existing content of the Wishes component */}
 
-      <section className="max-w-3xl mx-auto mt-12 space-y-6">
+      <section id="confirmar" className="max-w-3xl mx-auto mt-12 space-y-6">
         <h2 className="text-3xl font-['Alex_Brush'] text-center text-[#CFAA93]">Confirmar Presença</h2>
         <p className="text-sm text-center text-[#CFAA93] font-['TexGyreTermes']">
           Por favor, confirme sua presença até 30/07/2025

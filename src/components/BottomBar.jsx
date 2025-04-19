@@ -6,7 +6,8 @@ import {
   CalendarHeart,
   MapPin,
   Gift,
-  MessageCircleHeart
+  MessageCircleHeart, 
+  BadgeHelp
 } from 'lucide-react';
 import { cn } from "@/lib/utils";
 
@@ -14,8 +15,8 @@ const menuItems = [
   { icon: Home, label: 'Início', href: '#home' },
   { icon: CalendarHeart, label: 'Evento', href: '#event' },
   { icon: MapPin, label: 'Local', href: '#location' },
-  { icon: Gift, label: 'Presentes?', href: '#gifts' },
-  { icon: MessageCircleHeart, label: 'Confirmar!', href: '#wishes' },
+  { icon: MessageCircleHeart, label: 'Confirmar!', href: '#confirmar' },
+  { icon: BadgeHelp, label: 'Ajuda', href: 'https://wa.me/5551996121240' }
 ];
 
 /**

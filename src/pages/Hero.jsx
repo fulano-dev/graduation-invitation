@@ -1,15 +1,18 @@
 import { Calendar, Clock, Heart } from 'lucide-react'
+import { AnimatePresence } from 'framer-motion'
 import { motion } from 'framer-motion'
 import { useEffect, useState } from 'react';
 import config from '@/config/config';
 import { formatEventDate } from '@/lib/formatEventDate';
 import { Helmet } from 'react-helmet'; // Adicionado para preload das imagens
 import foto1 from '../photos/foto1.JPG';
-import foto2 from '../photos/foto4.JPG';
-import foto3 from '../photos/foto5.JPG';
+import foto2 from '../photos/foto2.JPG';
+import foto3 from '../photos/foto3.JPG';
+import foto4 from '../photos/foto4.JPG';
+import foto5 from '../photos/foto5.JPG';
 import logoPUC from '../photos/logo-puc.png';
 
-const images = [foto1, foto2, foto3];
+const images = [foto1, foto2, foto3, foto4, foto5];
 
 export default function Hero({ convidados = [] }) {
     const [mainEmoji, setMainEmoji] = useState("🎓");
@@ -117,6 +120,8 @@ export default function Hero({ convidados = [] }) {
               <link rel="preload" as="image" href={foto1} />
               <link rel="preload" as="image" href={foto2} />
               <link rel="preload" as="image" href={foto3} />
+              <link rel="preload" as="image" href={foto4} />
+              <link rel="preload" as="image" href={foto5} />
             </Helmet>
             <section id="home" className="min-h-screen flex flex-col items-center justify-center px-4 py-16 sm:py-20 text-center relative overflow-hidden">
                 {import.meta.env.VITE_AMBIENTE === 'HML' && (
@@ -167,17 +172,19 @@ export default function Hero({ convidados = [] }) {
                             Análise e Desenvolvimento de Sistemas
                         </motion.h2>
 
-                        <div className="relative flex justify-center mt-8">
-                        <motion.img
-                            key={currentImageIndex}
-                            src={images[currentImageIndex]}
-                            alt="Foto do formando"
-                            initial={{ opacity: 0, scale: 0.98 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.98 }}
-                            transition={{ duration: 2, ease: "easeInOut" }}
-                            className="w-full max-w-2xl h-auto rounded-xl object-cover shadow-md border-4 border-[#CFAA93]"
-                          />
+                        <div className="relative w-full max-w-2xl aspect-[2/3] mx-auto mt-8 overflow-hidden rounded-xl border-4 border-[#CFAA93]">
+                          <AnimatePresence mode="wait">
+                            <motion.img
+                              key={images[currentImageIndex]}
+                              src={images[currentImageIndex]}
+                              alt={`Foto ${currentImageIndex + 1}`}
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                              exit={{ opacity: 0 }}
+                              transition={{ duration: 1 }}
+                              className="absolute top-0 left-0 w-full h-full object-cover rounded-xl"
+                            />
+                          </AnimatePresence>
                         </div>
                         <motion.p
                             initial={{ opacity: 0 }}
