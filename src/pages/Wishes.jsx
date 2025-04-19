@@ -144,6 +144,7 @@ const Wishes = ({ convidados = [] }) => {
                       type="number"
                       name={`idade-${index}`}
                       defaultValue={convidado.status !== 0 && convidado.idade ? convidado.idade : ""}
+                      required
                       className="w-20 px-3 py-1.5 rounded-xl bg-white/10 border border-[#CFAA93]/50 text-[#CFAA93] placeholder-[#CFAA93]/60 font-['TexGyreTermes']"
                     />
                   </div>
