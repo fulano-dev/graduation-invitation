@@ -84,6 +84,7 @@ const Wishes = ({ convidados = [] }) => {
             emailConfirmacao: email,
             convidados: dados.map(p => ({
               idConvidado: p.idConvidado,
+              nome: p.nome,
               status: p.confirmado ? 1 : 2,
               idade: p.idade
             }))
