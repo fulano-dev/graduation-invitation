@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 
 const Wishes = ({ convidados = [] }) => {
   const convidadosMock = convidados;
@@ -9,6 +10,9 @@ const Wishes = ({ convidados = [] }) => {
   const [envioFinalizado, setEnvioFinalizado] = useState(false);
   const [formPayload, setFormPayload] = useState(null);
   const [carregando, setCarregando] = useState(false);
+  const [statusTemp, setStatusTemp] = useState(
+    convidadosMock.map(c => (c.status === 0 ? 1 : c.status))
+  );
 
   const enviarConfirmacao = () => {
     if (!formPayload) return;
@@ -24,6 +28,15 @@ const Wishes = ({ convidados = [] }) => {
       setShowModal(false);
       setEnvioFinalizado(true);
       setCarregando(false);
+      
+      // Atualiza os dados dos convidados com o que foi confirmado
+      formPayload.convidados.forEach(({ idConvidado, status, idade }) => {
+        const index = convidadosMock.findIndex(c => c.idConvidado === idConvidado);
+        if (index !== -1) {
+          convidadosMock[index].status = status;
+          convidadosMock[index].idade = idade;
+        }
+      });
     })
     .catch(err => {
       console.error("Erro ao confirmar presença:", err);
@@ -81,14 +94,40 @@ const Wishes = ({ convidados = [] }) => {
           {convidadosMock.map((convidado, index) => (
             <div key={convidado.idConvidado} className="border border-[#CFAA93]/30 p-4 rounded-lg space-y-2 bg-white/5">
               <p className="text-[#CFAA93] font-semibold font-['TexGyreTermes']">{convidado.nome}</p>
+              <div className="flex items-center gap-2">
+                {convidado.status === 1 ? (
+                  <>
+                    <CheckCircle className="w-5 h-5 text-green-500" />
+                    <span className="text-green-500 font-bold">Confirmado</span>
+                  </>
+                ) : convidado.status === 2 ? (
+                  <>
+                    <XCircle className="w-5 h-5 text-red-500" />
+                    <span className="text-red-500 font-bold">Não comparecerá</span>
+                  </>
+                ) : (
+                  <>
+                    <AlertCircle className="w-5 h-5 text-yellow-500" />
+                    <span className="text-yellow-500 font-bold">Pendente</span>
+                  </>
+                )}
+              </div>
               
               <div className="flex items-center justify-between">
                 <span className="text-sm text-[#CFAA93] font-['TexGyreTermes']">Confirmar presença</span>
                 <label className="relative inline-flex items-center cursor-pointer">
-                  <input
+                <input
                     type="checkbox"
                     name={`confirmado-${index}`}
-                    defaultChecked={convidado.status === 1 || convidado.status === 0}
+                    checked={statusTemp[index] === 1}
+                    onChange={(e) => {
+                      const newStatus = e.target.checked ? 1 : 2;
+                      setStatusTemp(prev => {
+                        const updated = [...prev];
+                        updated[index] = newStatus;
+                        return updated;
+                      });
+                    }}
                     className="sr-only peer"
                   />
                   <div className="w-11 h-6 bg-white/20 border border-[#CFAA93]/40 peer-focus:outline-none rounded-full peer peer-checked:bg-[#CFAA93] peer-checked:border-[#CFAA93] transition-all duration-300"></div>
@@ -110,6 +149,20 @@ const Wishes = ({ convidados = [] }) => {
                   </div>
                 </>
               )}
+
+              <div className="space-y-2 pt-2">
+                {statusTemp[index] !== convidadosMock[index].status && (
+                  statusTemp[index] === 1 ? (
+                    <p className="text-green-500 text-sm font-['TexGyreTermes']">
+                      Você está confirmando presença. Clique em {convidadosMock.some(c => c.status === 1 || c.status === 2) ? "editar" : "enviar"} para salvar.
+                    </p>
+                  ) : (
+                    <p className="text-red-500 text-sm font-['TexGyreTermes']">
+                      Você está informando que não comparecerá. Clique em {convidadosMock.some(c => c.status === 1 || c.status === 2) ? "editar" : "enviar"} para salvar.
+                    </p>
+                  )
+                )}
+              </div>
             </div>
           ))}
 
