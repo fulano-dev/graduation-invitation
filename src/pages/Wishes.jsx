@@ -17,7 +17,7 @@ const Wishes = ({ convidados = [] }) => {
   const enviarConfirmacao = () => {
     if (!formPayload) return;
     setCarregando(true);
-
+    console.log(formPayload)
     fetch("https://graduation-invitation-production.up.railway.app/api/confirmarPresenca", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
