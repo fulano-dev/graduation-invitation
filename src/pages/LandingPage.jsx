@@ -4,11 +4,16 @@ import config from '@/config/config';
 import { useState } from 'react';
 import { formatEventDate } from '@/lib/formatEventDate';
 import { motion } from 'framer-motion';
+import InputMask from 'react-input-mask';
 
 const LandingPage = ({ onOpenInvitation, setConvidados }) => {
   const [code, setCode] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [modalMessage, setModalMessage] = useState('');
+  const [showPhoneModal, setShowPhoneModal] = useState(false);
+  const [phone, setPhone] = useState('');
+  const [foundCode, setFoundCode] = useState(null);
+  const [phoneError, setPhoneError] = useState('');
 
   const handleEnter = async () => {
     if (code.length === 4) {
@@ -26,7 +31,7 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
           onOpenInvitation();
         } else {
           setModalMessage(
-            "Não encontramos convidado com esse código, tente usar os 4 últimos números do telefone de algum dos convidados da sua família. Se não conseguir, entre em contato com o João."
+            'Não encontramos convidado com esse código, tente a opção "Buscar código do convite pelo telefone" ou tente usar os 4 últimos dígitos do telefone de alguém da sua família. Se não conseguir, entre em contato com o João.'
           );
           setShowModal(true);
         }
@@ -121,6 +126,12 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
                     >
                       Entrar no convite
                     </button>
+                    <button
+                      onClick={() => setShowPhoneModal(true)}
+                      className="text-sm font-['TexGyreTermes'] text-[#CFAA93] underline hover:text-[#bfa67e]"
+                    >
+                      Buscar código do convite pelo telefone
+                    </button>
                     <a
                       href="https://wa.me/5551996121240"
                       target="_blank"
@@ -148,6 +159,72 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
             >
               Fechar
             </button>
+          </div>
+        </div>
+      )}
+
+      {showPhoneModal && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-70 z-50">
+          <div className="bg-gradient-to-b from-[#0d2931] to-[#091d24] border border-[#CFAA93]/30 text-[#CFAA93] p-6 rounded-2xl shadow-2xl max-w-md w-full mx-4">
+            <h2 className="text-xl font-bold mb-2 font-['TexGyreTermes']">Buscar código por telefone</h2>
+            <InputMask
+              mask="(99) 99999-9999"
+              maskChar={null}
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+            >
+              {(inputProps) => (
+                <input
+                  {...inputProps}
+                  type="tel"
+                  placeholder="Digite seu telefone com DDD"
+                  className="w-full mb-4 px-4 py-2 border border-[#CFAA93]/40 bg-black/20 text-[#CFAA93] rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#CFAA93] text-base font-['TexGyreTermes']"
+                />
+              )}
+            </InputMask>
+            <div className="flex gap-4 mt-4">
+              <button
+                onClick={async () => {
+                  setPhoneError('');
+                  setFoundCode(null);
+                  try {
+                    const response = await fetch("https://graduation-invitation-production.up.railway.app/api/buscaCodigoConvitePorTelefone", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ telefone: phone.replace(/\D/g, '') })
+                    });
+                    const data = await response.json();
+                    if (data.encontrado) {
+                      setFoundCode(data.codigoConvite);
+                    } else {
+                      setPhoneError("Não encontramos um código com esse número. Por favor, entre em contato com o João.");
+                    }
+                  } catch (err) {
+                    setPhoneError("Erro ao buscar o código. Tente novamente.");
+                  }
+                }}
+                className="bg-[#CFAA93] text-black px-6 py-2 rounded-md hover:bg-[#bfa67e] transition font-['TexGyreTermes']"
+              >
+                Buscar código
+              </button>
+              <button
+                onClick={() => {
+                  setShowPhoneModal(false);
+                  setPhone('');
+                  setFoundCode(null);
+                  setPhoneError('');
+                }}
+                className="px-6 py-2 bg-[#CFAA93] text-black rounded-md hover:bg-[#bfa67e] font-['TexGyreTermes']"
+              >
+                Fechar
+              </button>
+            </div>
+            {foundCode && (
+              <p className="mt-4 text-sm font-['TexGyreTermes']">Seu código de convite é: <strong>{foundCode}</strong></p>
+            )}
+            {phoneError && (
+              <p className="mt-4 text-sm text-red-400 font-['TexGyreTermes']">{phoneError}</p>
+            )}
           </div>
         </div>
       )}

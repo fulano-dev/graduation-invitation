@@ -243,6 +243,30 @@ app.post('/api/confirmarPresenca', async (req, res) => {
   }
 });
 
+app.post('/api/buscaCodigoConvitePorTelefone', async (req, res) => {
+  try {
+    const { telefone } = req.body;
+
+    if (!telefone) {
+      return res.status(400).json({ erro: "Telefone não informado." });
+    }
+
+    const [rows] = await db.query(
+      "SELECT codigoConvite FROM convidados WHERE telefone = ? LIMIT 1",
+      [telefone]
+    );
+
+    if (rows.length === 0) {
+      return res.status(404).json({ encontrado: false, mensagem: "Nenhum convite encontrado para esse número de telefone." });
+    }
+
+    return res.status(200).json({ encontrado: true, codigoConvite: rows[0].codigoConvite });
+  } catch (error) {
+    console.error("Erro ao buscar código de convite por telefone:", error);
+    res.status(500).json({ erro: "Erro interno ao buscar código de convite." });
+  }
+});
+
 app.listen(port, () => {
   console.log(`🚀 Servidor rodando em http://localhost:${port}`);
 });
