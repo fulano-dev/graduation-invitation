@@ -11,7 +11,7 @@ const LandingPage = ({ onOpenInvitation }) => {
   const handleEnter = async () => {
     if (code.length === 4) {
       try {
-        const response = await fetch('https://graduation-api-jet.vercel.app/api/buscaConvite', {
+        const response = await fetch('http://localhost:3000/graduation-api/api/buscaConvite', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ codigoConvite: code })
