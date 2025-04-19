@@ -153,7 +153,7 @@ app.post('/api/confirmarPresenca', async (req, res) => {
 
     if (confirmadosList.length === 0 && recusadosList.length > 0) {
       mailOptionsConvidado = {
-        from: `"João Pedro - Formatura" <${process.env.EMAIL_USER}>`,
+        from: `"João Pedro Vargas da Silva" <${process.env.EMAIL_USER}>`,
         to: emailConfirmacao,
         subject: "Sentiremos sua falta 😢",
         html: `
@@ -180,7 +180,7 @@ app.post('/api/confirmarPresenca', async (req, res) => {
       };
     } else {
       mailOptionsConvidado = {
-        from: `"João Pedro - Formatura" <${process.env.EMAIL_USER}>`,
+        from: `"João Pedro Vargas da Silva" <${process.env.EMAIL_USER}>`,
         to: emailConfirmacao,
         subject: "🎉 Confirmação recebida! Estou te esperando em 30/08! 🎓🥂",
         html: `
@@ -215,7 +215,7 @@ app.post('/api/confirmarPresenca', async (req, res) => {
     }
 
     const mailOptionsAdmin = {
-      from: `"Sistema Formatura" <${process.env.EMAIL_USER}>`,
+      from: `"João Pedro Vargas da Silva" <${process.env.EMAIL_USER}>`,
       to: "joaopedrovsilva102@gmail.com",
       subject: `Nova confirmação recebida (convite ${codigoConvite})`,
       html: `
