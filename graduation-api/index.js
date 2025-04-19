@@ -46,10 +46,10 @@ app.post('/api/confirmarPresenca', async (req, res) => {
     }
 
     const updatePromises = convidados.map(async (convidado) => {
-      const { idConvidado, status, idade } = convidado;
+      const { idConvidado, status, idade, crianca } = convidado;
       return db.query(
-        "UPDATE convidados SET status = ?, idade = ?, crianca = ? WHERE idConvidado = ?",
-        [status, idade || null, idade > 10 ? 0 : 1, idConvidado]
+        "UPDATE convidados SET status = ?, idade = ? WHERE idConvidado = ?",
+        [status, idade || null, idConvidado]
       );
     });
 
