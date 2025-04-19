@@ -193,7 +193,7 @@ const Wishes = ({ convidados = [] }) => {
 
         {showModal && (
           <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-            <div className="bg-white p-6 rounded-lg max-w-md w-full text-center space-y-4 text-[#CFAA93] font-['TexGyreTermes']">
+            <div className="bg-[#0f3e57] p-6 rounded-lg max-w-md w-full text-center space-y-4 text-[#CFAA93] font-['TexGyreTermes']">
               <h3 className="text-xl font-semibold">
                 {convidadosMock.some(c => c.status === 1 || c.status === 2)
                   ? "Você está editando sua confirmação de presença:"
@@ -240,7 +240,7 @@ const Wishes = ({ convidados = [] }) => {
 
         {erroEnvio && (
           <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-            <div className="bg-white p-6 rounded-lg max-w-md w-full text-center space-y-4 text-[#CFAA93] font-['TexGyreTermes']">
+            <div className="bg-[#0f3e57] p-6 rounded-lg max-w-md w-full text-center space-y-4 text-[#CFAA93] font-['TexGyreTermes']">
               <h3 className="text-xl font-semibold text-red-500">Erro</h3>
               <p className="text-sm text-[#CFAA93]">{erroEnvio}</p>
               <button
@@ -255,7 +255,7 @@ const Wishes = ({ convidados = [] }) => {
         
         {envioFinalizado && (
           <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-            <div className="bg-white p-6 rounded-lg max-w-md w-full text-center space-y-4 text-[#CFAA93] font-['TexGyreTermes']">
+            <div className="bg-[#0f3e57] p-6 rounded-lg max-w-md w-full text-center space-y-4 text-[#CFAA93] font-['TexGyreTermes']">
               <h3 className="text-xl font-semibold">Confirmação registrada!</h3>
               <p className="text-sm">Agradecemos por confirmar sua presença. Esperamos por você na formatura!</p>
               <button
