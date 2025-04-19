@@ -37,6 +37,36 @@ app.post('/api/buscaConvite', async (req, res) => {
   }
 });
 
+app.post('/api/confirmarPresenca', async (req, res) => {
+  try {
+    const { codigoConvite, emailConfirmacao, convidados } = req.body;
+
+    if (!codigoConvite || !emailConfirmacao || !Array.isArray(convidados)) {
+      return res.status(400).json({ erro: "Dados incompletos para confirmação." });
+    }
+
+    const updatePromises = convidados.map(async (convidado) => {
+      const { idConvidado, status, idade } = convidado;
+      return db.query(
+        "UPDATE convidados SET status = ?, idade = ? WHERE idConvidado = ?",
+        [status, idade || null, idConvidado]
+      );
+    });
+
+    await Promise.all(updatePromises);
+
+    await db.query(
+      "INSERT INTO Confirmacoes (codigoConvite, dataConfirmacao, emailConfirmacao) VALUES (?, NOW(), ?)",
+      [codigoConvite, emailConfirmacao]
+    );
+
+    return res.status(200).json({ mensagem: "Confirmação registrada com sucesso." });
+  } catch (error) {
+    console.error("Erro ao confirmar presença:", error);
+    res.status(500).json({ erro: "Erro interno ao registrar confirmação." });
+  }
+});
+
 app.listen(port, () => {
   console.log(`🚀 Servidor rodando em http://localhost:${port}`);
 });
