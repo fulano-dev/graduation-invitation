@@ -11,19 +11,9 @@ import logoPUC from '../photos/logo-puc.png';
 
 const images = [foto1, foto2, foto3];
 
-export default function Hero() {
-    const [guestName, setGuestName] = useState('');
+export default function Hero({ convidados = [] }) {
     const [mainEmoji, setMainEmoji] = useState("🎓");
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
-
-    useEffect(() => {
-        const urlParams = new URLSearchParams(window.location.search);
-        const guestParam = urlParams.get('guest');
-
-        if (guestParam) {
-            setGuestName(decodeURIComponent(guestParam));
-        }
-    }, []);
 
     useEffect(() => {
       const interval = setInterval(() => {
@@ -265,10 +255,14 @@ export default function Hero() {
                                     className="space-y-2"
                                 >
                                         <p className="text-[#CFAA93] font-['TexGyreTermes'] font-serif italic text-sm">
-                                            Convidado:
+                                          {convidados.length > 1 ? "Queridos" : "Querido"}
                                         </p>
-                                        <p className="text-[#CFAA93] font-['TexGyreTermes'] font-semibold text-2xl sm:text-3xl">
-                                            {guestName ? guestName : "Convidado"}
+                                        <p className="text-[#CFAA93] font-['TexGyreTermes'] font-semibold text-xl sm:text-2xl">
+                                          {convidados.map((c, i) => {
+                                            const isLast = i === convidados.length - 1;
+                                            const isSecondLast = i === convidados.length - 2;
+                                            return `${c.nome}${isLast ? '.' : isSecondLast ? ' e ' : ', '}`;
+                                          }).join('')}
                                         </p>
                                 </motion.div>
                             </div>

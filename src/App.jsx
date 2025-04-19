@@ -46,6 +46,7 @@ import fotoHorizontal from '@/photos/foto-background-horizontal.JPG';
 function App() {
   const [isInvitationOpen, setIsInvitationOpen] = useState(false);
   const [backgroundImage, setBackgroundImage] = useState(fotoVertical);
+  const [convidadosData, setConvidadosData] = useState([]);
   
   useEffect(() => {
     const handleResize = () => {
@@ -97,12 +98,15 @@ function App() {
           >
             <div className="absolute inset-0 bg-black/60 z-0" />
             <div className="relative z-10">
-              <LandingPage onOpenInvitation={() => setIsInvitationOpen(true)} />
+              <LandingPage
+                onOpenInvitation={() => setIsInvitationOpen(true)}
+                setConvidados={setConvidadosData}
+              />
             </div>
           </div>
         ) : (
           <Layout>
-            <MainContent />
+            <MainContent convidados={convidadosData} />
           </Layout>
         )}
       </AnimatePresence>

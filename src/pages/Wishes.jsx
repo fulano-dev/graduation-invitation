@@ -1,38 +1,7 @@
 import React, { useState } from 'react';
 
-const Wishes = () => {
-  const convidadosMock = [
-    {
-      idConvidado: 1,
-      codigoConvite: 1234,
-      nome: "Maria Silva",
-      idade: 10,
-      email: "maria@email.com",
-      telefone: "(51) 99999-9999",
-      status: 0,
-      crianca: true,
-    },
-    {
-      idConvidado: 2,
-      codigoConvite: 1234,
-      nome: "João Silva",
-      idade: 35,
-      email: "joao@email.com",
-      telefone: "(51) 98888-8888",
-      status: 0,
-      crianca: false,
-    },
-    {
-      idConvidado: 2,
-      codigoConvite: 1234,
-      nome: "João Pedro Silva",
-      idade: 35,
-      email: "joao@email.com",
-      telefone: "(51) 98888-8888",
-      status: 0,
-      crianca: false,
-    },
-  ];
+const Wishes = ({ convidados = [] }) => {
+  const convidadosMock = convidados;
 
   const [showModal, setShowModal] = useState(false);
   const [confirmados, setConfirmados] = useState([]);
@@ -53,11 +22,15 @@ const Wishes = () => {
         <form className="bg-[#CFAA93]/10 p-6 rounded-2xl border border-[#CFAA93]/50 shadow-lg space-y-4" onSubmit={(e) => {
           e.preventDefault();
           const form = new FormData(e.target);
-          const dados = convidadosMock.map((convidado, i) => ({
-            ...convidado,
-            confirmado: form.get(`confirmado-${i}`) === 'on',
-            idade: form.get(`idade-${i}`)
-          }));
+          const dados = convidadosMock.map((convidado, i) => {
+            const idadeInput = form.get(`idade-${i}`);
+            const idade = convidado.crianca === true && idadeInput && parseInt(idadeInput) > 0 ? parseInt(idadeInput) : null;
+            return {
+              ...convidado,
+              confirmado: form.get(`confirmado-${i}`) === 'on',
+              idade: idade
+            };
+          });
           setConfirmados(dados);
           setShowModal(true);
         }}>
@@ -74,7 +47,7 @@ const Wishes = () => {
                 </label>
               </div>
 
-              {convidado.crianca && (
+              {convidado.crianca === true && (
                 <>
                   <p className="text-sm italic text-[#CFAA93] font-['TexGyreTermes']">O anfitrião marcou que este convidado é uma criança.</p>
                   <div>
@@ -82,14 +55,12 @@ const Wishes = () => {
                     <input
                       type="number"
                       name={`idade-${index}`}
+                      defaultValue=""
                       className="w-full px-4 py-2 rounded-xl bg-white/10 border border-[#CFAA93]/50 text-[#CFAA93] placeholder-[#CFAA93]/60 font-['TexGyreTermes']"
-                      defaultValue={convidado.idade}
                     />
                   </div>
                 </>
               )}
-
-              {null}
             </div>
           ))}
 
@@ -123,7 +94,7 @@ const Wishes = () => {
                 {confirmados.map(p =>
                   p.confirmado ? (
                     <li key={p.idConvidado}>
-                      {p.nome}, {p.crianca ? `Criança, ${p.idade} anos.` : 'Adulto.'}
+                      {p.nome}, {p.crianca ? (p.idade > 0 ? `Criança, ${p.idade} anos.` : 'Criança.') : 'Adulto.'}
                     </li>
                   ) : (
                     <li key={p.idConvidado}>

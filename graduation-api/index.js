@@ -1,4 +1,3 @@
-// index.js
 import express from 'express';
 import cors from 'cors';
 import { db } from './db.js';
@@ -22,11 +21,16 @@ app.post('/api/buscaConvite', async (req, res) => {
       [codigoConvite]
     );
 
+    const convidadosComBoolean = rows.map((convidado) => ({
+      ...convidado,
+      crianca: convidado.crianca === 1,
+    }));
+
     if (rows.length === 0) {
-      return res.status(404).json({ mensagem: "Nenhum convidado localizado com este código de convite." });
+      return res.status(200).json({ convidados: [], codigoValido: false, mensagem: "Nenhum convidado localizado com este código de convite." });
     }
 
-    return res.status(200).json({ convidados: rows });
+    return res.status(200).json({ convidados: convidadosComBoolean });
   } catch (error) {
     console.error("Erro ao buscar convidados:", error);
     res.status(500).json({ erro: "Erro interno ao buscar os convidados." });
