@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { formatEventDate } from '@/lib/formatEventDate';
 import { motion } from 'framer-motion';
 import InputMask from 'react-input-mask';
+const API_URL = import.meta.env.VITE_URL_API;
 
 const LandingPage = ({ onOpenInvitation, setConvidados }) => {
   const [code, setCode] = useState('');
@@ -30,7 +31,7 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
           ? "/api/recusarConvidado"
           : "/api/pendenteConvidado";
 
-      await fetch(`https://graduation-invitation-production.up.railway.app${endpoint}`, {
+      await fetch(`${API_URL}${endpoint}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ idConvidado }),
@@ -54,7 +55,7 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
   const handleEnter = async () => {
     if (code.length === 4) {
       try {
-        const response = await fetch('https://graduation-invitation-production.up.railway.app/api/buscaConvite', {
+        const response = await fetch(`${API_URL}/api/buscaConvite`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ codigoConvite: code })
@@ -66,7 +67,7 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
           setShowImportModal(true);
           return;
         } else if (code === "LIST") {
-          const res = await fetch("https://graduation-invitation-production.up.railway.app/api/listarConvidadosPorFamilia");
+          const res = await fetch(`${API_URL}/api/listarConvidadosPorFamilia`);
           const data = await res.json();
           if (res.ok && typeof data === 'object') {
             const familiasConvertidas = Object.entries(data).map(([codigoConvite, convidados]) => ({
@@ -234,7 +235,7 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
                   setPhoneError('');
                   setFoundCode(null);
                   try {
-                    const response = await fetch("https://graduation-invitation-production.up.railway.app/api/buscaCodigoConvitePorTelefone", {
+                    const response = await fetch(`${API_URL}/api/buscaCodigoConvitePorTelefone`, {
                       method: "POST",
                       headers: { "Content-Type": "application/json" },
                       body: JSON.stringify({ telefone: phone.replace(/\D/g, '') })
@@ -287,7 +288,7 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
                 formData.append("arquivo", fileInput.files[0]);
 
                 try {
-                  const response = await fetch("https://graduation-invitation-production.up.railway.app/api/importarConvidados", {
+                  const response = await fetch(`${API_URL}/api/importarConvidados`, {
                     method: "POST",
                     body: formData
                   });
@@ -422,13 +423,13 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
         onClick={() => {
           const confirmar = window.confirm("Tem certeza que deseja excluir este convidado?");
           if (!confirmar) return;
-          fetch("https://graduation-invitation-production.up.railway.app/api/deletarConvidado", {
+          fetch(`${API_URL}/api/deletarConvidado`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ idConvidado: convidado.idConvidado }),
           }).then(async (response) => {
             if (response.ok) {
-              const res = await fetch("https://graduation-invitation-production.up.railway.app/api/listarConvidadosPorFamilia");
+              const res = await fetch(`${API_URL}/api/listarConvidadosPorFamilia`);
               const data = await res.json();
               if (res.ok && typeof data === "object") {
                 const familiasConvertidas = Object.entries(data).map(([codigoConvite, convidados]) => ({
@@ -524,8 +525,8 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
                 onClick={async () => {
                   try {
                     const url = newGuest.idConvidado
-                      ? 'https://graduation-invitation-production.up.railway.app/api/editarConvidado'
-                      : 'https://graduation-invitation-production.up.railway.app/api/adicionarConvidado';
+                      ? `${API_URL}/api/editarConvidado`
+                      : `${API_URL}/api/adicionarConvidado`;
  
                     const response = await fetch(url, {
                       method: 'POST',
@@ -535,7 +536,7 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
  
                     if (response.ok) {
                       alert(newGuest.idConvidado ? 'Convidado atualizado com sucesso!' : 'Convidado adicionado com sucesso!');
-                      const res = await fetch("https://graduation-invitation-production.up.railway.app/api/listarConvidadosPorFamilia");
+                      const res = await fetch(`${API_URL}/api/listarConvidadosPorFamilia`);
                       const data = await res.json();
                       if (res.ok && typeof data === 'object') {
                         const familiasConvertidas = Object.entries(data).map(([codigoConvite, convidados]) => ({
