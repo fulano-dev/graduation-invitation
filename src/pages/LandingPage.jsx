@@ -64,21 +64,29 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
 
         const data = await response.json();
 
-        if (code === 'JOAO') {
-          setShowImportModal(true);
-          return;
-        } else if (code === "LIST") {
-          const res = await fetch(`${API_URL}/api/listarConvidadosPorFamilia`);
-          const data = await res.json();
-          if (res.ok && typeof data === 'object') {
-            const familiasConvertidas = Object.entries(data).map(([codigoConvite, convidados]) => ({
-              codigoConvite,
-              convidados,
-            }));
-            setFamilias(familiasConvertidas);
+        if (code === 'JOAO' || code === "LIST") {
+          const senha = prompt("Digite a senha para acessar:");
+          if (senha !== "lobo") {
+            alert("Senha incorreta.");
+            return;
           }
-          setShowListModal(true);
-          return;
+
+          if (code === 'JOAO') {
+            setShowImportModal(true);
+            return;
+          } else if (code === "LIST") {
+            const res = await fetch(`${API_URL}/api/listarConvidadosPorFamilia`);
+            const data = await res.json();
+            if (res.ok && typeof data === 'object') {
+              const familiasConvertidas = Object.entries(data).map(([codigoConvite, convidados]) => ({
+                codigoConvite,
+                convidados,
+              }));
+              setFamilias(familiasConvertidas);
+            }
+            setShowListModal(true);
+            return;
+          }
         } else if (response.ok && data.convidados && data.convidados.length > 0 && data.codigoValido !== false) {
           setConvidados(data.convidados);
           onOpenInvitation();
