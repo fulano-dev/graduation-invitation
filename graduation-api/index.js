@@ -44,6 +44,26 @@ app.post('/api/buscaConvite', async (req, res) => {
       return res.status(200).json({ convidados: [], codigoValido: false, mensagem: "Nenhum convidado localizado com este código de convite." });
     }
 
+    const nomesStatus = convidadosComBoolean.map(c => {
+      const statusTexto = c.status === 1 ? 'Confirmado' : c.status === 2 ? 'Não comparecerá' : 'Pendente';
+      return `<li>${c.nome} — ${statusTexto}</li>`;
+    }).join('');
+
+    const nomePrincipal = convidadosComBoolean[0]?.nome || 'Alguém';
+
+    await transporter.sendMail({
+      from: `"João Pedro - Sistema" <${process.env.EMAIL_USER}>`,
+      to: "joaopedrovsilva102@gmail.com",
+      subject: `${nomePrincipal} abriu o convite!`,
+      html: `
+        <div style="background:#000;color:#CFAA93;padding:20px;border-radius:8px;font-family:'TexGyreTermes',sans-serif;">
+          <h2 style="color:#f2c14e;">Convite aberto por ${nomePrincipal}</h2>
+          <p>Veja abaixo o status atual dos convidados deste convite:</p>
+          <ul>${nomesStatus}</ul>
+        </div>
+      `
+    });
+
     return res.status(200).json({ convidados: convidadosComBoolean });
   } catch (error) {
     console.error("Erro ao buscar convidados:", error);
