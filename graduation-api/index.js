@@ -2,6 +2,8 @@ import express from 'express';
 import cors from 'cors';
 import { db } from './db.js';
 import nodemailer from 'nodemailer';
+import multer from 'multer';
+import fs from 'fs';
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
@@ -17,6 +19,8 @@ const port = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json());
+
+const upload = multer({ dest: 'uploads/' });
 
 app.post('/api/buscaConvite', async (req, res) => {
   try {
@@ -267,6 +271,159 @@ app.post('/api/buscaCodigoConvitePorTelefone', async (req, res) => {
   }
 });
 
+app.post('/api/importarConvidados', upload.single('arquivo'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ erro: "Arquivo não enviado." });
+    }
+
+    const workbook = XLSX.readFile(req.file.path);
+    const sheetName = workbook.SheetNames[0];
+    const data = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
+
+    for (const convidado of data) {
+      const nome = convidado.Nome || convidado.nome;
+      if (!nome || nome.trim() === "") continue;
+
+      const idade = convidado.Idade || convidado.idade || null;
+      const telefone = convidado.Telefone || convidado.telefone || '';
+      const email = convidado.Email || convidado.email || null;
+      const codigoConvite = convidado.CodigoConvite || convidado.codigoConvite;
+      const crianca = convidado.Crianca === '1' || convidado.crianca === 1 || convidado.crianca === true;
+
+      await db.query(
+        "INSERT INTO convidados (nome, idade, telefone, email, codigoConvite, crianca, status) VALUES (?, ?, ?, ?, ?, ?, 0)",
+        [nome, idade, telefone, email, codigoConvite, crianca]
+      );
+    }
+
+    fs.unlinkSync(req.file.path); // remove o arquivo temporário
+    res.status(200).json({ mensagem: "Convidados importados com sucesso." });
+  } catch (error) {
+    console.error("Erro ao importar convidados:", error);
+    res.status(500).json({ erro: "Erro ao importar convidados." });
+  }
+});
+
+// Retorna todos os convidados agrupados por código de convite
+app.get('/api/listarConvidadosPorFamilia', async (req, res) => {
+  try {
+    const [rows] = await db.query(
+      "SELECT idConvidado, nome, codigoConvite, status, crianca, idade, telefone FROM convidados ORDER BY codigoConvite"
+    );
+
+    const familias = {};
+    for (const row of rows) {
+      if (!familias[row.codigoConvite]) {
+        familias[row.codigoConvite] = [];
+      }
+      familias[row.codigoConvite].push({
+        idConvidado: row.idConvidado,
+        nome: row.nome,
+        status: row.status,
+        crianca: !!row.crianca,
+        idade: row.idade,
+        telefone: row.telefone
+      });
+    }
+
+    res.status(200).json(familias);
+  } catch (error) {
+    console.error("Erro ao listar convidados:", error);
+    res.status(500).json({ erro: "Erro ao listar convidados." });
+  }
+});
+
+// Atualiza o status de um convidado para confirmado
+app.post('/api/confirmarConvidado', async (req, res) => {
+  try {
+    const { idConvidado } = req.body;
+    await db.query("UPDATE convidados SET status = 1 WHERE idConvidado = ?", [idConvidado]);
+    res.status(200).json({ mensagem: "Convidado confirmado com sucesso." });
+  } catch (error) {
+    console.error("Erro ao confirmar convidado:", error);
+    res.status(500).json({ erro: "Erro ao confirmar convidado." });
+  }
+});
+
+// Atualiza o status de um convidado para recusado
+app.post('/api/recusarConvidado', async (req, res) => {
+  try {
+    const { idConvidado } = req.body;
+    await db.query("UPDATE convidados SET status = 2 WHERE idConvidado = ?", [idConvidado]);
+    res.status(200).json({ mensagem: "Convidado recusado com sucesso." });
+  } catch (error) {
+    console.error("Erro ao recusar convidado:", error);
+    res.status(500).json({ erro: "Erro ao recusar convidado." });
+  }
+});
+
+// Atualiza o status de um convidado para pendente
+app.post('/api/pendenteConvidado', async (req, res) => {
+  try {
+    const { idConvidado } = req.body;
+    await db.query("UPDATE convidados SET status = 0 WHERE idConvidado = ?", [idConvidado]);
+    res.status(200).json({ mensagem: "Convidado marcado como pendente com sucesso." });
+  } catch (error) {
+    console.error("Erro ao marcar convidado como pendente:", error);
+    res.status(500).json({ erro: "Erro ao atualizar status para pendente." });
+  }
+});
+
+// Remove um convidado
+app.post('/api/deletarConvidado', async (req, res) => {
+  try {
+    const { idConvidado } = req.body;
+    if (!idConvidado) {
+      return res.status(400).json({ erro: "ID do convidado não fornecido." });
+    }
+    await db.query("DELETE FROM convidados WHERE idConvidado = ?", [idConvidado]);
+    res.status(200).json({ mensagem: "Convidado removido com sucesso." });
+  } catch (error) {
+    console.error("Erro ao remover convidado:", error);
+    res.status(500).json({ erro: "Erro ao remover convidado." });
+  }
+});
+
+// Adiciona um novo convidado
+app.post('/api/adicionarConvidado', async (req, res) => {
+  try {
+    const { nome, idade, telefone, email, codigoConvite, crianca } = req.body;
+    if (!nome || !codigoConvite) {
+      return res.status(400).json({ erro: "Nome e código do convite são obrigatórios." });
+    }
+    await db.query(
+      "INSERT INTO convidados (nome, idade, telefone, email, codigoConvite, crianca, status) VALUES (?, ?, ?, ?, ?, ?, 0)",
+      [nome, idade, telefone, email, codigoConvite, crianca]
+    );
+    res.status(200).json({ mensagem: "Convidado adicionado com sucesso." });
+  } catch (error) {
+    console.error("Erro ao adicionar convidado:", error);
+    res.status(500).json({ erro: "Erro ao adicionar convidado." });
+  }
+});
+
+app.post('/api/editarConvidado', async (req, res) => {
+    const { idConvidado, nome, telefone, codigoConvite, crianca } = req.body;
+  
+    if (!idConvidado || !nome || !codigoConvite) {
+      return res.status(400).json({ erro: 'Campos obrigatórios ausentes.' });
+    }
+  
+    try {
+      await db.query(
+        'UPDATE convidados SET nome = ?, telefone = ?, codigoConvite = ?, crianca = ? WHERE idConvidado = ?',
+        [nome, telefone, codigoConvite, crianca ? 1 : 0, idConvidado]
+      );
+  
+      res.status(200).json({ sucesso: true });
+    } catch (err) {
+      console.error('Erro ao editar convidado:', err);
+      res.status(500).json({ erro: 'Erro ao editar convidado.' });
+    }
+  });
+
 app.listen(port, () => {
   console.log(`🚀 Servidor rodando em http://localhost:${port}`);
 });
+

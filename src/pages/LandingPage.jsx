@@ -14,6 +14,42 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
   const [phone, setPhone] = useState('');
   const [foundCode, setFoundCode] = useState(null);
   const [phoneError, setPhoneError] = useState('');
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [showListModal, setShowListModal] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [familias, setFamilias] = useState([]);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [newGuest, setNewGuest] = useState({ nome: '', telefone: '', codigoConvite: '', crianca: false });
+
+  const atualizarStatus = async (idConvidado, novoStatus) => {
+    try {
+      const endpoint =
+        novoStatus === 1
+          ? "/api/confirmarConvidado"
+          : novoStatus === 2
+          ? "/api/recusarConvidado"
+          : "/api/pendenteConvidado";
+
+      await fetch(`https://graduation-invitation-production.up.railway.app${endpoint}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ idConvidado }),
+      });
+
+      setFamilias((prev) =>
+        prev.map((familia) => ({
+          ...familia,
+          convidados: familia.convidados.map((convidado) =>
+            convidado.idConvidado === idConvidado
+              ? { ...convidado, status: novoStatus }
+              : convidado
+          ),
+        }))
+      );
+    } catch (err) {
+      alert("Erro ao atualizar o status.");
+    }
+  };
 
   const handleEnter = async () => {
     if (code.length === 4) {
@@ -26,14 +62,24 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
 
         const data = await response.json();
 
-        if (response.ok && data.convidados && data.convidados.length > 0 && data.codigoValido !== false) {
+        if (code === 'JOAO') {
+          setShowImportModal(true);
+          return;
+        } else if (code === "LIST") {
+          const res = await fetch("https://graduation-invitation-production.up.railway.app/api/listarConvidadosPorFamilia");
+          const data = await res.json();
+          if (res.ok && typeof data === 'object') {
+            const familiasConvertidas = Object.entries(data).map(([codigoConvite, convidados]) => ({
+              codigoConvite,
+              convidados,
+            }));
+            setFamilias(familiasConvertidas);
+          }
+          setShowListModal(true);
+          return;
+        } else if (response.ok && data.convidados && data.convidados.length > 0 && data.codigoValido !== false) {
           setConvidados(data.convidados);
           onOpenInvitation();
-        } else {
-          setModalMessage(
-            'Não encontramos convidado com esse código, tente a opção "Buscar código do convite pelo telefone" ou tente usar os 4 últimos dígitos do telefone de alguém da sua família. Se não conseguir, entre em contato com o João.'
-          );
-          setShowModal(true);
         }
       } catch (error) {
         console.error('Erro ao validar código:', error);
@@ -225,6 +271,302 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
             {phoneError && (
               <p className="mt-4 text-sm text-red-400 font-['TexGyreTermes']">{phoneError}</p>
             )}
+          </div>
+        </div>
+      )}
+
+      {showImportModal && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-70 z-50">
+          <div className="bg-gradient-to-b from-[#0d2931] to-[#091d24] border border-[#CFAA93]/30 text-[#CFAA93] p-6 rounded-2xl shadow-2xl max-w-md w-full mx-4">
+            <h2 className="text-xl font-bold mb-4 font-['TexGyreTermes']">Importar convidados</h2>
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault();
+                const fileInput = e.target.elements.file;
+                const formData = new FormData();
+                formData.append("arquivo", fileInput.files[0]);
+
+                try {
+                  const response = await fetch("https://graduation-invitation-production.up.railway.app/api/importarConvidados", {
+                    method: "POST",
+                    body: formData
+                  });
+
+                  if (response.ok) {
+                    alert("Convidados importados com sucesso!");
+                  } else {
+                    alert("Erro ao importar convidados.");
+                  }
+                } catch (err) {
+                  alert("Erro na requisição.");
+                }
+
+                setShowImportModal(false);
+              }}
+            >
+              <input
+                type="file"
+                name="file"
+                accept=".xlsx"
+                required
+                className="w-full mb-4 px-4 py-2 border border-[#CFAA93]/40 bg-black/20 text-[#CFAA93] rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#CFAA93] text-base font-['TexGyreTermes']"
+              />
+              <div className="flex gap-4">
+                <button type="submit" className="bg-[#CFAA93] text-black px-6 py-2 rounded-md hover:bg-[#bfa67e] transition font-['TexGyreTermes']">
+                  Importar
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowImportModal(false)}
+                  className="px-6 py-2 bg-[#CFAA93] text-black rounded-md hover:bg-[#bfa67e] font-['TexGyreTermes']"
+                >
+                  Cancelar
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {showListModal && (
+        <div className="fixed inset-0 flex items-start justify-center bg-black bg-opacity-70 z-50 overflow-y-auto pt-10">
+          <div className="bg-gradient-to-b from-[#0d2931] to-[#091d24] border border-[#CFAA93]/30 text-[#CFAA93] p-6 rounded-2xl shadow-2xl max-w-3xl w-full mx-4">
+            <h2 className="text-2xl font-bold mb-4 font-['TexGyreTermes'] text-center">Lista de Convidados</h2>
+            <input
+              type="text"
+              placeholder="Buscar por nome..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full mb-6 px-4 py-2 border border-[#CFAA93]/40 bg-black/20 text-[#CFAA93] rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#CFAA93] text-base font-['TexGyreTermes']"
+            />
+            {familias
+              .filter((familia) =>
+                searchTerm.trim() === '' ||
+                familia.convidados.some((convidado) =>
+                  convidado.nome.toLowerCase().includes(searchTerm.toLowerCase())
+                )
+              )
+              .map((familia, index) => (
+              <div key={index} className="mb-6 border-t border-[#CFAA93]/20 pt-4">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-lg font-semibold">Família {familia.codigoConvite}</h3>
+                  <button
+                    onClick={() => {
+                      setNewGuest(prev => ({ ...prev, codigoConvite: familia.codigoConvite }));
+                      setShowAddModal(true);
+                    }}
+                    className="bg-[#CFAA93] text-black px-3 py-1 rounded-full hover:bg-[#bfa67e] text-sm"
+                  >
+                    +
+                  </button>
+                </div>
+                {familia.convidados.map((convidado) => (
+                  <div key={convidado.idConvidado} className="flex justify-between items-center mb-2 p-2 bg-black/20 rounded-md">
+                      <span className="text-sm">
+                        {convidado.nome}
+                        {convidado.crianca && (
+                          <>
+                            {' '}👶
+                            {convidado.idade ? ` (${convidado.idade} anos)` : ''}
+                          </>
+                        )}
+                      </span>
+                    <div className="flex items-center gap-2">
+                      <span title={convidado.status === 1 ? "Confirmado" : convidado.status === 2 ? "Recusado" : "Pendente"}>
+                        {convidado.status === 1 ? "✅" : convidado.status === 2 ? "❌" : "⚠️"}
+                      </span>
+                      <div className="relative inline-block text-left">
+  <button
+    onClick={() =>
+      setFamilias((prev) =>
+        prev.map((f) =>
+          f.codigoConvite === familia.codigoConvite
+            ? {
+                ...f,
+                convidados: f.convidados.map((c) =>
+                  c.idConvidado === convidado.idConvidado
+                    ? { ...c, showMenu: !c.showMenu }
+                    : { ...c, showMenu: false }
+                ),
+              }
+            : f
+        )
+      )
+    }
+    className="ml-2 px-2 py-1 bg-[#CFAA93] text-black rounded-full"
+  >
+    ⋮
+  </button>
+
+  {convidado.showMenu && (
+    <div className="absolute z-10 mt-2 right-0 w-48 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5">
+      <button
+        onClick={() => atualizarStatus(convidado.idConvidado, 1)}
+        className="block w-full px-4 py-2 text-left text-green-700 hover:bg-green-50"
+      >
+        ✅ Confirmar
+      </button>
+      <button
+        onClick={() => atualizarStatus(convidado.idConvidado, 2)}
+        className="block w-full px-4 py-2 text-left text-red-700 hover:bg-red-50"
+      >
+        ❌ Recusar
+      </button>
+      <button
+        onClick={() => atualizarStatus(convidado.idConvidado, 0)}
+        className="block w-full px-4 py-2 text-left text-yellow-700 hover:bg-yellow-50"
+      >
+        ⚠️ Pendente
+      </button>
+      <button
+        onClick={() => {
+          const confirmar = window.confirm("Tem certeza que deseja excluir este convidado?");
+          if (!confirmar) return;
+          fetch("https://graduation-invitation-production.up.railway.app/api/deletarConvidado", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ idConvidado: convidado.idConvidado }),
+          }).then(async (response) => {
+            if (response.ok) {
+              const res = await fetch("https://graduation-invitation-production.up.railway.app/api/listarConvidadosPorFamilia");
+              const data = await res.json();
+              if (res.ok && typeof data === "object") {
+                const familiasConvertidas = Object.entries(data).map(([codigoConvite, convidados]) => ({
+                  codigoConvite,
+                  convidados,
+                }));
+                setFamilias(familiasConvertidas);
+              }
+            } else {
+              alert("Erro ao excluir convidado.");
+            }
+          }).catch(() => alert("Erro na requisição."));
+        }}
+        className="block w-full px-4 py-2 text-left text-gray-700 hover:bg-gray-100"
+      >
+        🗑️ Excluir
+      </button>
+      <button
+        onClick={() => {
+          setNewGuest({
+            idConvidado: convidado.idConvidado,
+            nome: convidado.nome,
+            telefone: convidado.telefone || '',
+            codigoConvite: familia.codigoConvite,
+            crianca: !!convidado.crianca,
+          });
+          setShowAddModal(true);
+        }}
+        className="block w-full px-4 py-2 text-left text-blue-700 hover:bg-blue-50"
+      >
+        ✏️ Editar
+      </button>
+    </div>
+  )}
+</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ))}
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="mb-4 px-6 py-2 bg-[#CFAA93] text-black rounded-md hover:bg-[#bfa67e] font-['TexGyreTermes'] w-full"
+            >
+              Adicionar Convidado
+            </button>
+            <button
+              onClick={() => setShowListModal(false)}
+              className="mt-4 px-6 py-2 bg-[#CFAA93] text-black rounded-md hover:bg-[#bfa67e] font-['TexGyreTermes'] w-full"
+            >
+              Fechar
+            </button>
+          </div>
+        </div>
+      )}
+
+      {showAddModal && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-70 z-50">
+          <div className="bg-gradient-to-b from-[#0d2931] to-[#091d24] border border-[#CFAA93]/30 text-[#CFAA93] p-6 rounded-2xl shadow-2xl max-w-md w-full mx-4">
+            <h2 className="text-xl font-bold mb-4 font-['TexGyreTermes']">Adicionar Convidado</h2>
+            <input
+              type="text"
+              placeholder="Nome"
+              value={newGuest.nome}
+              onChange={(e) => setNewGuest({ ...newGuest, nome: e.target.value })}
+              className="w-full mb-2 px-4 py-2 border border-[#CFAA93]/40 bg-black/20 text-[#CFAA93] rounded-md"
+            />
+            <input
+              type="text"
+              placeholder="Telefone"
+              value={newGuest.telefone}
+              onChange={(e) => setNewGuest({ ...newGuest, telefone: e.target.value })}
+              className="w-full mb-2 px-4 py-2 border border-[#CFAA93]/40 bg-black/20 text-[#CFAA93] rounded-md"
+            />
+            <input
+              type="text"
+              placeholder="Código do Convite"
+              value={newGuest.codigoConvite}
+              onChange={(e) => setNewGuest({ ...newGuest, codigoConvite: e.target.value })}
+              className="w-full mb-2 px-4 py-2 border border-[#CFAA93]/40 bg-black/20 text-[#CFAA93] rounded-md"
+            />
+            <label className="flex items-center mb-4">
+              <input
+                type="checkbox"
+                checked={newGuest.crianca}
+                onChange={(e) => setNewGuest({ ...newGuest, crianca: e.target.checked })}
+                className="mr-2"
+              />
+              É criança?
+            </label>
+            <div className="flex gap-4">
+              <button
+                onClick={async () => {
+                  try {
+                    const url = newGuest.idConvidado
+                      ? 'https://graduation-invitation-production.up.railway.app/api/editarConvidado'
+                      : 'https://graduation-invitation-production.up.railway.app/api/adicionarConvidado';
+ 
+                    const response = await fetch(url, {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify(newGuest)
+                    });
+ 
+                    if (response.ok) {
+                      alert(newGuest.idConvidado ? 'Convidado atualizado com sucesso!' : 'Convidado adicionado com sucesso!');
+                      const res = await fetch("https://graduation-invitation-production.up.railway.app/api/listarConvidadosPorFamilia");
+                      const data = await res.json();
+                      if (res.ok && typeof data === 'object') {
+                        const familiasConvertidas = Object.entries(data).map(([codigoConvite, convidados]) => ({
+                          codigoConvite,
+                          convidados,
+                        }));
+                        setFamilias(familiasConvertidas);
+                      }
+                      setShowAddModal(false);
+                      setNewGuest({ nome: '', telefone: '', codigoConvite: '', crianca: false });
+                    } else {
+                      alert('Erro ao salvar convidado.');
+                    }
+                  } catch (err) {
+                    alert('Erro na requisição.');
+                  }
+                }}
+                className="bg-[#CFAA93] text-black px-6 py-2 rounded-md hover:bg-[#bfa67e]"
+              >
+                Salvar
+              </button>
+              <button
+                onClick={() => {
+                  setShowAddModal(false);
+                  setNewGuest({ nome: '', telefone: '', codigoConvite: '', crianca: false });
+                }}
+                className="px-6 py-2 bg-[#CFAA93] text-black rounded-md hover:bg-[#bfa67e]"
+              >
+                Cancelar
+              </button>
+            </div>
           </div>
         </div>
       )}
