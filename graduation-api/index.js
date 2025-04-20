@@ -73,12 +73,20 @@ app.post('/api/confirmarPresenca', async (req, res) => {
       "INSERT INTO Confirmacoes (codigoConvite, dataConfirmacao, emailConfirmacao) VALUES (?, NOW(), ?)",
       [codigoConvite, emailConfirmacao]
     );
-
+console.log(convidados)
     const nomesConfirmados = convidados.map((c) => {
       const statusTexto = c.status === 1 ? 'Confirmado' : c.status === 2 ? 'Não comparecerá' : 'Pendente';
-      const idadeTexto = c.crianca && c.idade ? `${c.idade} anos` : 'Adulto';
+      let tipoTexto = 'Adulto';
+      console.log(c.crianca)
+      if (c.crianca) {
+        if (c.idade !== null && c.idade !== undefined) {
+          tipoTexto = `${c.idade} anos (Criança)`;
+        } else {
+          tipoTexto = 'Criança';
+        }
+      }
       const nome = c.nome || c.nomeConvidado || 'Convidado';
-      return `<li>${nome} - ${idadeTexto} — ${statusTexto}</li>`;
+      return `<li>${nome} - ${tipoTexto} — ${statusTexto}</li>`;
     }).join('');
 
     const confirmadosList = convidados.filter(c => c.status === 1).map(c => c.nome || c.nomeConvidado || 'Convidado');
@@ -105,7 +113,6 @@ app.post('/api/confirmarPresenca', async (req, res) => {
         GROUP BY codigoConvite
       ) cf ON c.codigoConvite = cf.codigoConvite
     `);
-    console.log(todosConvidados);
 
     const confirmados = todosConvidados.filter(c => c.status === 1);
     const recusados = todosConvidados.filter(c => c.status === 2);
@@ -404,7 +411,7 @@ app.post('/api/adicionarConvidado', async (req, res) => {
 });
 
 app.post('/api/editarConvidado', async (req, res) => {
-    const { idConvidado, nome, telefone, codigoConvite, crianca } = req.body;
+    const { idConvidado, nome, telefone, codigoConvite, crianca, idade } = req.body;
   
     if (!idConvidado || !nome || !codigoConvite) {
       return res.status(400).json({ erro: 'Campos obrigatórios ausentes.' });
@@ -412,8 +419,8 @@ app.post('/api/editarConvidado', async (req, res) => {
   
     try {
       await db.query(
-        'UPDATE convidados SET nome = ?, telefone = ?, codigoConvite = ?, crianca = ? WHERE idConvidado = ?',
-        [nome, telefone, codigoConvite, crianca ? 1 : 0, idConvidado]
+        'UPDATE convidados SET nome = ?, telefone = ?, codigoConvite = ?, crianca = ?, idade = ? WHERE idConvidado = ?',
+        [nome, telefone, codigoConvite, crianca ? 1 : 0, idade ?? null, idConvidado]
       );
   
       res.status(200).json({ sucesso: true });

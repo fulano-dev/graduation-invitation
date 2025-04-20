@@ -24,7 +24,13 @@ const Wishes = ({ convidados = [] }) => {
       body: JSON.stringify(formPayload)
     })
     .then(res => res.json())
-    .then(() => {
+    .then((response) => {
+      if (!response || response.erro) {
+        setErroEnvio("Ocorreu um erro ao confirmar sua presença. Por favor, tente novamente mais tarde ou entre em contato com João.");
+        setShowModal(false);
+        setCarregando(false);
+        return;
+      }
       setShowModal(false);
       setEnvioFinalizado(true);
       setCarregando(false);
@@ -40,7 +46,7 @@ const Wishes = ({ convidados = [] }) => {
     })
     .catch(err => {
       console.error("Erro ao confirmar presença:", err);
-      setErroEnvio("Erro ao enviar confirmação. Tente novamente ou verifique sua conexão.");
+      setErroEnvio("Ocorreu um erro ao confirmar sua presença. Por favor, tente novamente mais tarde ou entre em contato com João.");
       setShowModal(false);
       setCarregando(false);
     });
@@ -86,7 +92,8 @@ const Wishes = ({ convidados = [] }) => {
               idConvidado: p.idConvidado,
               nome: p.nome,
               status: p.confirmado ? 1 : 2,
-              idade: p.idade
+              idade: p.idade,
+              crianca: p.crianca
             }))
           });
           setConfirmados(dados);
@@ -257,7 +264,10 @@ const Wishes = ({ convidados = [] }) => {
           <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
             <div className="bg-[#0f3e57] p-6 rounded-lg max-w-md w-full text-center space-y-4 text-[#CFAA93] font-['TexGyreTermes']">
               <h3 className="text-xl font-semibold">Confirmação registrada!</h3>
-              <p className="text-sm">Agradecemos por confirmar sua presença. Esperamos por você na formatura!</p>
+              <p className="text-sm">
+                Agradecemos por confirmar sua presença. Esperamos por você na formatura! 📩
+                Você receberá um e-mail de confirmação em instantes — verifique sua caixa de entrada.
+              </p>
               <button
                 className="px-4 py-2 bg-[#CFAA93] text-black rounded"
                 onClick={() => setEnvioFinalizado(false)}

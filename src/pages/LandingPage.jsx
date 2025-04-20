@@ -81,13 +81,14 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
         } else if (response.ok && data.convidados && data.convidados.length > 0 && data.codigoValido !== false) {
           setConvidados(data.convidados);
           onOpenInvitation();
+        } else {
+          setModalMessage('Não encontramos convidado com esse código. Tente usar os 4 últimos números do telefone de algum dos convidados da sua família ou usar a opção "Buscar código do convite pelo telefone". Se não conseguir, entre em contato com o João.');
+          setShowModal(true);
         }
       } catch (error) {
         console.error('Erro ao validar código:', error);
         alert('Erro ao validar o código. Tente novamente mais tarde.');
       }
-    } else {
-      alert('Por favor, digite um código válido de 4 dígitos.');
     }
   };
 
@@ -275,6 +276,22 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
           </div>
         </div>
       )}
+      {modalMessage && !showModal && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-70 z-50">
+          <div className="bg-[#0d2931] text-[#CFAA93] p-6 rounded-lg shadow-lg max-w-md w-full mx-4">
+            <h2 className="text-xl font-bold mb-2 font-['TexGyreTermes']">Código não encontrado</h2>
+            <p className="text-sm font-['TexGyreTermes']">{modalMessage}</p>
+            <button
+              onClick={() => {
+                setModalMessage('');
+              }}
+              className="mt-4 px-4 py-2 bg-[#CFAA93] text-black rounded-md hover:bg-[#bfa67e] font-['TexGyreTermes']"
+            >
+              Fechar
+            </button>
+          </div>
+        </div>
+      )}
 
       {showImportModal && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-70 z-50">
@@ -332,6 +349,50 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
       {showListModal && (
         <div className="fixed inset-0 flex items-start justify-center bg-black bg-opacity-70 z-50 overflow-y-auto pt-10">
           <div className="bg-gradient-to-b from-[#0d2931] to-[#091d24] border border-[#CFAA93]/30 text-[#CFAA93] p-6 rounded-2xl shadow-2xl max-w-3xl w-full mx-4">
+            <div className="flex justify-between items-center mb-4">
+              <div>
+                <p className="font-['TexGyreTermes'] text-sm">
+                  <strong>Total de Convidados:</strong> {familias.reduce((acc, f) => acc + f.convidados.length, 0)}
+                </p>
+                <p className="font-['TexGyreTermes'] text-sm">
+                  <strong>Total de Famílias:</strong> {familias.length}
+                </p>
+                <p className="font-['TexGyreTermes'] text-sm">
+                  <strong>Adultos Confirmados:</strong> {
+                    familias.reduce((acc, f) =>
+                      acc + f.convidados.filter(c => c.status === 1 && (!c.crianca || (c.idade && c.idade > 10))).length
+                    , 0)
+                  }
+                </p>
+                <p className="font-['TexGyreTermes'] text-sm">
+                  <strong>Crianças 6 a 10 anos Confirmadas:</strong> {
+                    familias.reduce((acc, f) =>
+                      acc + f.convidados.filter(c => c.status === 1 && c.crianca && c.idade >= 6 && c.idade <= 10).length
+                    , 0)
+                  }
+                </p>
+                <p className="font-['TexGyreTermes'] text-sm">
+                  <strong>Crianças 0 a 5 anos Confirmadas:</strong> {
+                    familias.reduce((acc, f) =>
+                      acc + f.convidados.filter(c => c.status === 1 && c.crianca && c.idade >= 0 && c.idade <= 5).length
+                    , 0)
+                  }
+                </p>
+                <p className="font-['TexGyreTermes'] text-sm">
+                  <strong>Total de Recusados:</strong> {
+                    familias.reduce((acc, f) =>
+                      acc + f.convidados.filter(c => c.status === 2).length
+                    , 0)
+                  }
+                </p>
+              </div>
+              <button
+                onClick={() => setShowListModal(false)}
+                className="text-[#CFAA93] hover:text-[#bfa67e] font-bold text-lg"
+              >
+                ✕
+              </button>
+            </div>
             <h2 className="text-2xl font-bold mb-4 font-['TexGyreTermes'] text-center">Lista de Convidados</h2>
             <input
               type="text"
@@ -376,6 +437,20 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
                       <span title={convidado.status === 1 ? "Confirmado" : convidado.status === 2 ? "Recusado" : "Pendente"}>
                         {convidado.status === 1 ? "✅" : convidado.status === 2 ? "❌" : "⚠️"}
                       </span>
+                      <button
+                        onClick={() => atualizarStatus(convidado.idConvidado, 1)}
+                        className="bg-green-600 text-white px-2 py-1 rounded-full text-xs hover:bg-green-700"
+                        title="Confirmar"
+                      >
+                        Confirmar
+                      </button>
+                      <button
+                        onClick={() => atualizarStatus(convidado.idConvidado, 2)}
+                        className="bg-red-600 text-white px-2 py-1 rounded-full text-xs hover:bg-red-700"
+                        title="Recusar"
+                      >
+                        Recusar
+                      </button>
                       <div className="relative inline-block text-left">
   <button
     onClick={() =>
@@ -401,18 +476,6 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
 
   {convidado.showMenu && (
     <div className="absolute z-10 mt-2 right-0 w-48 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5">
-      <button
-        onClick={() => atualizarStatus(convidado.idConvidado, 1)}
-        className="block w-full px-4 py-2 text-left text-green-700 hover:bg-green-50"
-      >
-        ✅ Confirmar
-      </button>
-      <button
-        onClick={() => atualizarStatus(convidado.idConvidado, 2)}
-        className="block w-full px-4 py-2 text-left text-red-700 hover:bg-red-50"
-      >
-        ❌ Recusar
-      </button>
       <button
         onClick={() => atualizarStatus(convidado.idConvidado, 0)}
         className="block w-full px-4 py-2 text-left text-yellow-700 hover:bg-yellow-50"
@@ -520,6 +583,15 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
               />
               É criança?
             </label>
+            {newGuest.crianca && (
+              <input
+                type="number"
+                placeholder="Idade"
+                value={newGuest.idade || ''}
+                onChange={(e) => setNewGuest({ ...newGuest, idade: e.target.value })}
+                className="w-full mb-4 px-4 py-2 border border-[#CFAA93]/40 bg-black/20 text-[#CFAA93] rounded-md"
+              />
+            )}
             <div className="flex gap-4">
               <button
                 onClick={async () => {
@@ -531,7 +603,7 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
                     const response = await fetch(url, {
                       method: 'POST',
                       headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify(newGuest)
+                      body: JSON.stringify({ ...newGuest, idade: newGuest.crianca ? newGuest.idade : null })
                     });
  
                     if (response.ok) {
