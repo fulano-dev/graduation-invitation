@@ -19,6 +19,7 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
   const [showListModal, setShowListModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [familias, setFamilias] = useState([]);
+  const [selectedFilters, setSelectedFilters] = useState([]);
   const [showAddModal, setShowAddModal] = useState(false);
   const [newGuest, setNewGuest] = useState({ nome: '', telefone: '', codigoConvite: '', crianca: false });
 
@@ -399,8 +400,31 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
               placeholder="Buscar por nome..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full mb-6 px-4 py-2 border border-[#CFAA93]/40 bg-black/20 text-[#CFAA93] rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#CFAA93] text-base font-['TexGyreTermes']"
+              className="w-full mb-2 px-4 py-2 border border-[#CFAA93]/40 bg-black/20 text-[#CFAA93] rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#CFAA93] text-base font-['TexGyreTermes']"
             />
+            <div className="flex flex-wrap gap-4 mb-6">
+              {[
+                { label: "Confirmados", value: "confirmados" },
+                { label: "Recusados", value: "recusados" },
+                { label: "Pendentes", value: "pendentes" },
+                { label: "Crianças", value: "criancas" },
+              ].map(({ label, value }) => (
+                <label key={value} className="flex items-center space-x-2 font-['TexGyreTermes']">
+                  <input
+                    type="checkbox"
+                    value={value}
+                    checked={selectedFilters.includes(value)}
+                    onChange={(e) => {
+                      const isChecked = e.target.checked;
+                      setSelectedFilters((prev) =>
+                        isChecked ? [...prev, value] : prev.filter((v) => v !== value)
+                      );
+                    }}
+                  />
+                  <span>{label}</span>
+                </label>
+              ))}
+            </div>
             {familias
               .filter((familia) =>
                 searchTerm.trim() === '' ||
@@ -408,6 +432,26 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
                   convidado.nome.toLowerCase().includes(searchTerm.toLowerCase())
                 )
               )
+              .map((familia) => {
+                const convidadosFiltrados = familia.convidados.filter((convidado) => {
+                  const matchesStatus =
+                    selectedFilters.length === 0 ||
+                    (selectedFilters.includes("confirmados") && convidado.status === 1) ||
+                    (selectedFilters.includes("recusados") && convidado.status === 2) ||
+                    (selectedFilters.includes("pendentes") && convidado.status === 0);
+
+                  const matchesCrianca =
+                    !selectedFilters.includes("criancas") || Boolean(convidado.crianca);
+
+                  return matchesStatus && matchesCrianca;
+                });
+
+                return {
+                  ...familia,
+                  convidados: convidadosFiltrados,
+                };
+              })
+              .filter((familia) => familia.convidados.length > 0)
               .map((familia, index) => (
               <div key={index} className="mb-6 border-t border-[#CFAA93]/20 pt-4">
                 <div className="flex items-center justify-between mb-2">
@@ -539,6 +583,14 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
             >
               Adicionar Convidado
             </button>
+            <a
+              href={`${API_URL}/api/exportarListaPDF`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block w-full text-center mt-2 mb-2 bg-[#CFAA93] text-black px-6 py-3 rounded-lg text-base font-semibold hover:bg-[#bfa67e] transition font-['TexGyreTermes']"
+            >
+              📄 Exportar Lista em PDF
+            </a>
             <button
               onClick={() => setShowListModal(false)}
               className="mt-4 px-6 py-2 bg-[#CFAA93] text-black rounded-md hover:bg-[#bfa67e] font-['TexGyreTermes'] w-full"

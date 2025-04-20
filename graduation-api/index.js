@@ -13,6 +13,7 @@ const transporter = nodemailer.createTransport({
 });
 import XLSX from 'xlsx';
 import path from 'path';
+import PDFDocument from 'pdfkit';
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -519,6 +520,61 @@ app.post('/api/editarConvidado', async (req, res) => {
     } catch (err) {
       console.error('Erro ao editar convidado:', err);
       res.status(500).json({ erro: 'Erro ao editar convidado.' });
+    }
+  });
+  app.get('/api/exportarListaPDF', async (req, res) => {
+    try {
+      const [convidados] = await db.query('SELECT * FROM convidados ORDER BY codigoConvite ASC');
+  
+      const familias = {};
+      convidados.forEach((c) => {
+        if (!familias[c.codigoConvite]) familias[c.codigoConvite] = [];
+        familias[c.codigoConvite].push(c);
+      });
+  
+      const doc = new PDFDocument();
+      const filename = 'lista_convidados.pdf';
+  
+      res.setHeader('Content-Disposition', `attachment; filename=${filename}`);
+      res.setHeader('Content-Type', 'application/pdf');
+      doc.pipe(res);
+  
+      doc.fontSize(20).text('Lista de Convidados por Família', { align: 'center' }).moveDown();
+  
+      Object.entries(familias).forEach(([codigo, lista]) => {
+        doc.fontSize(16).text(`Família ${codigo}`, { underline: true });
+        lista.forEach(c => {
+          const status = c.status === 1 ? 'Confirmado' : c.status === 2 ? 'Recusado' : 'Pendente';
+          const crianca = c.crianca ? ` - Criança (${c.idade || 'sem idade'})` : '';
+          doc.fontSize(12).text(`• ${c.nome}${crianca} - ${status}`);
+        });
+        doc.moveDown();
+      });
+  
+      const totalConvidados = convidados.length;
+      const totalFamilias = Object.keys(familias).length;
+      const confirmados = convidados.filter(c => c.status === 1);
+      const recusados = convidados.filter(c => c.status === 2);
+      const pendentes = convidados.filter(c => c.status === 0);
+      const adultosConfirmados = confirmados.filter(c => !c.crianca || (c.idade && c.idade > 10));
+      const criancas05 = confirmados.filter(c => c.crianca && c.idade >= 0 && c.idade <= 5);
+      const criancas610 = confirmados.filter(c => c.crianca && c.idade >= 6 && c.idade <= 10);
+  
+      doc.addPage().fontSize(18).text('Consolidado', { underline: true }).moveDown();
+      doc.fontSize(12).list([
+        `Total de Convidados: ${totalConvidados}`,
+        `Total de Famílias: ${totalFamilias}`,
+        `Adultos Confirmados: ${adultosConfirmados.length}`,
+        `Crianças 0 a 5 anos Confirmadas: ${criancas05.length}`,
+        `Crianças 6 a 10 anos Confirmadas: ${criancas610.length}`,
+        `Pessoas Recusadas: ${recusados.length}`,
+        `Pessoas Pendentes: ${pendentes.length}`,
+      ]);
+  
+      doc.end();
+    } catch (err) {
+      console.error('Erro ao gerar PDF:', err);
+      res.status(500).json({ erro: 'Erro ao gerar PDF.' });
     }
   });
 
