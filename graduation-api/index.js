@@ -347,6 +347,18 @@ app.post('/api/confirmarConvidado', async (req, res) => {
     const { idConvidado } = req.body;
     await db.query("UPDATE convidados SET status = 1 WHERE idConvidado = ?", [idConvidado]);
     res.status(200).json({ mensagem: "Convidado confirmado com sucesso." });
+    const [[convidadoInfo]] = await db.query(
+        "SELECT nome FROM convidados WHERE idConvidado = ?",
+        [idConvidado]
+      );
+      const nomeConvidado = convidadoInfo?.nome || 'Convidado Desconhecido';
+  
+      await transporter.sendMail({
+        from: `"João Pedro - Sistema" <${process.env.EMAIL_USER}>`,
+        to: "joaopedrovsilva102@gmail.com",
+        subject: `Status alterado: ${nomeConvidado} confirmado`,
+        html: `<p>O convidado <strong>${nomeConvidado}</strong> (ID: ${idConvidado}) foi <strong>confirmado</strong> manualmente.</p>`
+      });
   } catch (error) {
     console.error("Erro ao confirmar convidado:", error);
     res.status(500).json({ erro: "Erro ao confirmar convidado." });
@@ -359,6 +371,19 @@ app.post('/api/recusarConvidado', async (req, res) => {
     const { idConvidado } = req.body;
     await db.query("UPDATE convidados SET status = 2 WHERE idConvidado = ?", [idConvidado]);
     res.status(200).json({ mensagem: "Convidado recusado com sucesso." });
+    const [[convidadoInfo]] = await db.query(
+        "SELECT nome FROM convidados WHERE idConvidado = ?",
+        [idConvidado]
+      );
+      const nomeConvidado = convidadoInfo?.nome || 'Convidado Desconhecido';
+  
+      await transporter.sendMail({
+        from: `"João Pedro - Sistema" <${process.env.EMAIL_USER}>`,
+        to: "joaopedrovsilva102@gmail.com",
+        subject: `Status alterado: ${nomeConvidado} recusado`,
+        html: `<p>O convidado <strong>${nomeConvidado}</strong> (ID: ${idConvidado}) foi <strong>recusado</strong> manualmente.</p>`
+      });
+  
   } catch (error) {
     console.error("Erro ao recusar convidado:", error);
     res.status(500).json({ erro: "Erro ao recusar convidado." });
@@ -371,6 +396,18 @@ app.post('/api/pendenteConvidado', async (req, res) => {
     const { idConvidado } = req.body;
     await db.query("UPDATE convidados SET status = 0 WHERE idConvidado = ?", [idConvidado]);
     res.status(200).json({ mensagem: "Convidado marcado como pendente com sucesso." });
+    const [[convidadoInfo]] = await db.query(
+        "SELECT nome FROM convidados WHERE idConvidado = ?",
+        [idConvidado]
+      );
+      const nomeConvidado = convidadoInfo?.nome || 'Convidado Desconhecido';
+  
+      await transporter.sendMail({
+        from: `"João Pedro - Sistema" <${process.env.EMAIL_USER}>`,
+        to: "joaopedrovsilva102@gmail.com",
+        subject: `Status alterado: ${nomeConvidado} pendente`,
+        html: `<p>O convidado <strong>${nomeConvidado}</strong> (ID: ${idConvidado}) foi marcado como <strong>pendente</strong> manualmente.</p>`
+      });
   } catch (error) {
     console.error("Erro ao marcar convidado como pendente:", error);
     res.status(500).json({ erro: "Erro ao atualizar status para pendente." });
@@ -384,7 +421,15 @@ app.post('/api/deletarConvidado', async (req, res) => {
     if (!idConvidado) {
       return res.status(400).json({ erro: "ID do convidado não fornecido." });
     }
+    const [[convidadoInfo]] = await db.query("SELECT nome FROM convidados WHERE idConvidado = ?", [idConvidado]);
+    const nomeConvidado = convidadoInfo ? convidadoInfo.nome : 'Convidado desconhecido';
     await db.query("DELETE FROM convidados WHERE idConvidado = ?", [idConvidado]);
+    await transporter.sendMail({
+      from: `"João Pedro - Sistema" <${process.env.EMAIL_USER}>`,
+      to: "joaopedrovsilva102@gmail.com",
+      subject: "Convidado deletado",
+      html: `<p>O convidado <strong>${nomeConvidado}</strong> (ID: ${idConvidado}) foi removido do sistema.</p>`
+    });
     res.status(200).json({ mensagem: "Convidado removido com sucesso." });
   } catch (error) {
     console.error("Erro ao remover convidado:", error);
@@ -404,6 +449,20 @@ app.post('/api/adicionarConvidado', async (req, res) => {
       [nome, idade, telefone, email, codigoConvite, crianca]
     );
     res.status(200).json({ mensagem: "Convidado adicionado com sucesso." });
+    await transporter.sendMail({
+        from: `"João Pedro - Sistema" <${process.env.EMAIL_USER}>`,
+        to: "joaopedrovsilva102@gmail.com",
+        subject: "Novo convidado adicionado",
+        html: `
+          <p>Um novo convidado foi adicionado:</p>
+          <ul>
+            <li>Nome: ${nome}</li>
+            <li>Telefone: ${telefone}</li>
+            <li>Código Convite: ${codigoConvite}</li>
+            <li>${crianca ? 'Criança' : 'Adulto'}${idade ? ` (${idade} anos)` : ''}</li>
+          </ul>
+        `
+      });
   } catch (error) {
     console.error("Erro ao adicionar convidado:", error);
     res.status(500).json({ erro: "Erro ao adicionar convidado." });
@@ -424,6 +483,19 @@ app.post('/api/editarConvidado', async (req, res) => {
       );
   
       res.status(200).json({ sucesso: true });
+      await transporter.sendMail({
+        from: `"João Pedro - Sistema" <${process.env.EMAIL_USER}>`,
+        to: "joaopedrovsilva102@gmail.com",
+        subject: "Edição de convidado realizada",
+        html: `
+          <p>O convidado <strong>${nome}</strong> foi editado.</p>
+          <ul>
+            <li>Telefone: ${telefone}</li>
+            <li>Código Convite: ${codigoConvite}</li>
+            <li>${crianca ? 'Criança' : 'Adulto'}${idade ? ` (${idade} anos)` : ''}</li>
+          </ul>
+        `
+      });
     } catch (err) {
       console.error('Erro ao editar convidado:', err);
       res.status(500).json({ erro: 'Erro ao editar convidado.' });
