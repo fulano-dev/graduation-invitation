@@ -52,6 +52,7 @@ app.post('/api/buscaConvite', async (req, res) => {
 
     const nomePrincipal = convidadosComBoolean[0]?.nome || 'Alguém';
 
+    if(codigoConvite != 1240){
     await transporter.sendMail({
       from: `"João Pedro - Sistema" <${process.env.EMAIL_USER}>`,
       to: "joaopedrovsilva102@gmail.com",
@@ -63,7 +64,7 @@ app.post('/api/buscaConvite', async (req, res) => {
           <ul>${nomesStatus}</ul>
         </div>
       `
-    });
+    });}
 
     return res.status(200).json({ convidados: convidadosComBoolean });
   } catch (error) {
@@ -192,7 +193,7 @@ console.log(convidados)
           <div style="background-color:#000000;padding:20px;border-radius:10px;color:#CFAA93;font-family:'TexGyreTermes',sans-serif;text-align:center;">
             <img src="https://i.imgur.com/h6JrguV.jpeg" style="max-width:200px;width:100%;border-radius:8px;border:2px solid #CFAA93;margin-bottom:15px;display:block;margin-left:auto;margin-right:auto;" />
             <h2 style="color:#f2c14e;">Poxa, que pena! 😢</h2>
-        <p>Recebi a confirmação de que infelizmente ninguém da sua família poderá comparecer à recepção minha formatura.</p>
+        <p>Recebi a confirmação de que infelizmente ninguém da sua família poderá comparecer à recepção da minha formatura.</p>
             <p>Sentirei muito a falta de vocês nesse dia tão importante.</p>
             <p>Mas tudo bem, caso mude de ideia até <strong>30/07/2025</strong>, você ainda pode acessar o convite e atualizar a resposta.</p>
             <div style="margin-top:30px;">

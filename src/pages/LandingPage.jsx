@@ -167,7 +167,7 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
 
                   <div className="w-full flex flex-col items-center gap-3 mb-4 sm:mb-6">
                     <p className="text-sm sm:text-base font-['TexGyreTermes'] text-[#CFAA93]">
-                      Digite o código que está no verso do cartão com o QRCode.
+                      Digite o código de 4 dígitos que está no cartão com o QRCode que acompanha seu convite.
                     </p>
                     <input
                       type="text"
