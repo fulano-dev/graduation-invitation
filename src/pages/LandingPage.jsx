@@ -1,5 +1,6 @@
 import logoPuc from '@/photos/logo-puc.png';
 import backgroundImg from '@/photos/foto-background.jpeg';
+import infoIcon from '@/photos/info.png';
 import config from '@/config/config';
 import { useState } from 'react';
 import { formatEventDate } from '@/lib/formatEventDate';
@@ -167,7 +168,15 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
 
                   <div className="w-full flex flex-col items-center gap-3 mb-4 sm:mb-6">
                     <p className="text-sm sm:text-base font-['TexGyreTermes'] text-[#CFAA93]">
-                      Digite o código de 4 dígitos que está no cartão com o QRCode que acompanha seu convite.
+                      Digite o código de 4 dígitos que está no cartão com o QRCode.
+                      <span className="relative group inline-block ml-2 cursor-pointer">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 inline text-[#CFAA93]" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M18 10A8 8 0 11 2 10a8 8 0 0116 0zm-8 3a1 1 0 01-1-1v-1a1 1 0 112 0v1a1 1 0 01-1 1zm-1-6a1 1 0 012 0v1a1 1 0 11-2 0V7z" clipRule="evenodd" />
+                        </svg>
+                        <div className="absolute hidden group-hover:block group-focus:block z-10 top-6 left-1/2 transform -translate-x-1/2 bg-white border border-gray-200 rounded-lg shadow-lg p-2 w-60">
+                          <img src={infoIcon} alt="Ajuda sobre código QR" className="w-full h-auto rounded-md" />
+                        </div>
+                      </span>
                     </p>
                     <input
                       type="text"
