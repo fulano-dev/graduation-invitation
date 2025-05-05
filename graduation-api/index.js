@@ -58,7 +58,7 @@ app.post('/api/buscaConvite', async (req, res) => {
       to: "joaopedrovsilva102@gmail.com",
       subject: `${nomePrincipal} abriu o convite!`,
       html: `
-        <div style="background:#000;color:#CFAA93;padding:20px;border-radius:8px;font-family:'TexGyreTermes',sans-serif;">
+        <div style="background:#000;color:#F2B21C;padding:20px;border-radius:8px;font-family:'TexGyreTermes',sans-serif;">
           <h2 style="color:#f2c14e;">Convite aberto por ${nomePrincipal}</h2>
           <p>Veja abaixo o status atual dos convidados deste convite:</p>
           <ul>${nomesStatus}</ul>
@@ -190,8 +190,8 @@ console.log(convidados)
         to: emailConfirmacao,
         subject: "Sentiremos sua falta 😢",
         html: `
-          <div style="background-color:#000000;padding:20px;border-radius:10px;color:#CFAA93;font-family:'TexGyreTermes',sans-serif;text-align:center;">
-            <img src="https://i.imgur.com/h6JrguV.jpeg" style="max-width:200px;width:100%;border-radius:8px;border:2px solid #CFAA93;margin-bottom:15px;display:block;margin-left:auto;margin-right:auto;" />
+          <div style="background-color:#000000;padding:20px;border-radius:10px;color:#F2B21C;font-family:'TexGyreTermes',sans-serif;text-align:center;">
+            <img src="https://i.imgur.com/h6JrguV.jpeg" style="max-width:200px;width:100%;border-radius:8px;border:2px solid #F2B21C;margin-bottom:15px;display:block;margin-left:auto;margin-right:auto;" />
             <h2 style="color:#f2c14e;">Poxa, que pena! 😢</h2>
         <p>Recebi a confirmação de que infelizmente ninguém da sua família poderá comparecer à recepção da minha formatura.</p>
             <p>Sentirei muito a falta de vocês nesse dia tão importante.</p>
@@ -203,7 +203,7 @@ console.log(convidados)
                 </button>
               </a>
               <a href="https://wa.me/5551996121240" target="_blank" style="text-decoration:none;">
-                <button style="background-color:#CFAA93;color:#000;font-weight:bold;border:none;padding:10px 20px;border-radius:6px;font-family:'TexGyreTermes',sans-serif;">
+                <button style="background-color:#F2B21C;color:#000;font-weight:bold;border:none;padding:10px 20px;border-radius:6px;font-family:'TexGyreTermes',sans-serif;">
                   Falar comigo no WhatsApp
                 </button>
               </a>
@@ -217,8 +217,8 @@ console.log(convidados)
         to: emailConfirmacao,
         subject: "🎉 Confirmação recebida! Estou te esperando em 30/08! 🎓🥂",
         html: `
-          <div style="background-color:#000000;padding:20px;border-radius:10px;color:#CFAA93;font-family:'TexGyreTermes',sans-serif;text-align:center;">
-            <img src="https://i.imgur.com/h6JrguV.jpeg" style="max-width:250px;width:100%;border-radius:8px;border:2px solid #CFAA93;margin-bottom:15px;display:block;margin-left:auto;margin-right:auto;" />
+          <div style="background-color:#000000;padding:20px;border-radius:10px;color:#F2B21C;font-family:'TexGyreTermes',sans-serif;text-align:center;">
+            <img src="https://i.imgur.com/h6JrguV.jpeg" style="max-width:250px;width:100%;border-radius:8px;border:2px solid #F2B21C;margin-bottom:15px;display:block;margin-left:auto;margin-right:auto;" />
             <h2 style="color:#f2c14e;">Presença Confirmada! 🎉</h2>
             <p>Que alegria saber que você vem celebrar comigo esse momento tão especial! 💙</p>
             <p>Mal posso esperar para te ver na recepção da minha formatura! 🧑‍🎓</p>
@@ -237,7 +237,7 @@ console.log(convidados)
                 </button>
               </a>
               <a href="https://wa.me/5551996121240" target="_blank" style="text-decoration:none;">
-                <button style="background-color:#CFAA93;color:#000;font-weight:bold;border:none;padding:10px 20px;border-radius:6px;font-family:'TexGyreTermes',sans-serif;">
+                <button style="background-color:#F2B21C;color:#000;font-weight:bold;border:none;padding:10px 20px;border-radius:6px;font-family:'TexGyreTermes',sans-serif;">
                   Falar comigo no WhatsApp
                 </button>
               </a>
@@ -252,7 +252,7 @@ console.log(convidados)
       to: "joaopedrovsilva102@gmail.com",
       subject: `Nova confirmação recebida (convite ${codigoConvite})`,
       html: `
-        <div style="background-color:#000000;padding:20px;border-radius:10px;color:#CFAA93;font-family:'TexGyreTermes',sans-serif;">
+        <div style="background-color:#000000;padding:20px;border-radius:10px;color:#F2B21C;font-family:'TexGyreTermes',sans-serif;">
           <h2 style="color:#f2c14e;font-family:'TexGyreTermes',sans-serif;">Nova Confirmação</h2>
           <p style="font-family:'TexGyreTermes',sans-serif;">Convidado com código <strong>${codigoConvite}</strong> respondeu ao convite.</p>
           <p style="font-family:'TexGyreTermes',sans-serif;">Email informado: ${emailConfirmacao}</p>

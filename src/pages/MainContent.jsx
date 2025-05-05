@@ -15,12 +15,12 @@ export default function MainContent({ convidados }) {
         <>
             {mostrarModalConvite && convidados && convidados.length > 0 && (
                 <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-                    <div className="bg-[#0d2931] p-6 rounded-xl max-w-lg w-full text-center space-y-4 text-[#CFAA93] font-['TexGyreTermes'] shadow-lg">
+                    <div className="bg-[#0d2931] p-6 rounded-xl max-w-lg w-full text-center space-y-4 text-[#F2B21C] font-['TexGyreTermes'] shadow-lg">
                         {confirmados ? (
                             <>
                                 <CheckCircle className="mx-auto w-10 h-10 text-green-500" />
                                 <h3 className="text-xl font-semibold text-green-600">Confirmação recebida!</h3>
-                                <p className="text-sm text-[#CFAA93]">Tudo certo! Você já confirmou presença para:</p>
+                                <p className="text-sm text-[#F2B21C]">Tudo certo! Você já confirmou presença para:</p>
                                 <ul className="text-left text-sm list-disc list-inside">
                                     {convidados.map((c, i) => (
                                         <li key={i}>
@@ -33,13 +33,13 @@ export default function MainContent({ convidados }) {
                             </>
                         ) : (
                             <>
-                                <Info className="mx-auto w-10 h-10 text-[#CFAA93]" />
+                                <Info className="mx-auto w-10 h-10 text-[#F2B21C]" />
                                 <h3 className="text-xl font-semibold">Confirmação Pendente</h3>
                                 <p className="text-sm">Confirme sua presença até 30/07/2025 clicando no botão <strong>Confirmar</strong> no menu ou rolando até o final da página.</p>
                             </>
                         )}
                         <button
-                            className="mt-4 px-4 py-2 bg-[#CFAA93] text-black rounded-md hover:bg-[#bfa67e] transition"
+                            className="mt-4 px-4 py-2 bg-[#F2B21C] text-black rounded-md hover:bg-[#bfa67e] transition"
                             onClick={() => setMostrarModalConvite(false)}
                         >
                             Entendi

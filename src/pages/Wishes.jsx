@@ -57,21 +57,21 @@ const Wishes = ({ convidados = [] }) => {
       {/* Existing content of the Wishes component */}
 
       <section id="confirmar" className="max-w-3xl mx-auto mt-12 space-y-6">
-        <h2 className="text-3xl font-['Alex_Brush'] text-center text-[#CFAA93]">Confirmar Presença</h2>
-        <p className="text-sm text-center text-[#CFAA93] font-['TexGyreTermes']">
+        <h2 className="text-3xl font-['Alex_Brush'] text-center text-[#F2B21C]">Confirmar Presença</h2>
+        <p className="text-sm text-center text-[#F2B21C] font-['TexGyreTermes']">
           Por favor, confirme sua presença até 30/07/2025
         </p>
-        <p className="text-sm text-center text-[#CFAA93] font-['TexGyreTermes']">
+        <p className="text-sm text-center text-[#F2B21C] font-['TexGyreTermes']">
           Marque a presença de todos que irão comparecer e desmarque os que não poderão ir.
         </p>
  
         {convidadosMock.some(c => c.status === 1 || c.status === 2) && (
-          <div className="bg-green-600 text-white p-4 rounded-xl text-center font-['TexGyreTermes']">
+          <div className="bg-green-600 text-black p-4 rounded-xl text-center font-['TexGyreTermes']">
             Tudo certo, você já confirmou presença. Se quiser, pode editar o formulário abaixo.
           </div>
         )}
 
-        <form className="bg-[#CFAA93]/10 p-6 rounded-2xl border border-[#CFAA93]/50 shadow-lg space-y-4" onSubmit={(e) => {
+        <form className="bg-[#F2B21C]/10 p-6 rounded-2xl border border-[#F2B21C]/50 shadow-lg space-y-4" onSubmit={(e) => {
           e.preventDefault();
           const form = new FormData(e.target);
           const dados = convidadosMock.map((convidado, i) => {
@@ -100,8 +100,8 @@ const Wishes = ({ convidados = [] }) => {
           setShowModal(true);
         }}>
           {convidadosMock.map((convidado, index) => (
-            <div key={convidado.idConvidado} className="border border-[#CFAA93]/30 p-4 rounded-lg space-y-2 bg-white/5">
-              <p className="text-[#CFAA93] font-semibold font-['TexGyreTermes']">{convidado.nome}</p>
+            <div key={convidado.idConvidado} className="border border-[#F2B21C]/30 p-4 rounded-lg space-y-2 bg-white/5">
+              <p className="text-[#F2B21C] font-semibold font-['TexGyreTermes']">{convidado.nome}</p>
               <div className="flex items-center gap-2">
                 {convidado.status === 1 ? (
                   <>
@@ -122,7 +122,7 @@ const Wishes = ({ convidados = [] }) => {
               </div>
               
               <div className="flex items-center justify-between">
-                <span className="text-sm text-[#CFAA93] font-['TexGyreTermes']">Confirmar presença</span>
+                <span className="text-sm text-[#F2B21C] font-['TexGyreTermes']">Confirmar presença</span>
                 <label className="relative inline-flex items-center cursor-pointer">
                 <input
                     type="checkbox"
@@ -138,22 +138,22 @@ const Wishes = ({ convidados = [] }) => {
                     }}
                     className="sr-only peer"
                   />
-                  <div className="w-11 h-6 bg-white/20 border border-[#CFAA93]/40 peer-focus:outline-none rounded-full peer peer-checked:bg-[#CFAA93] peer-checked:border-[#CFAA93] transition-all duration-300"></div>
+                  <div className="w-11 h-6 bg-white/20 border border-[#F2B21C]/40 peer-focus:outline-none rounded-full peer peer-checked:bg-[#F2B21C] peer-checked:border-[#F2B21C] transition-all duration-300"></div>
                   <div className="absolute left-0.5 top-0.5 bg-white w-5 h-5 rounded-full transition-all duration-300 peer-checked:translate-x-full"></div>
                 </label>
               </div>
 
               {convidado.crianca === true && (
                 <>
-                  <p className="text-sm italic text-[#CFAA93] font-['TexGyreTermes'] mt-2">O anfitrião marcou que este convidado é uma criança.</p>
+                  <p className="text-sm italic text-[#F2B21C] font-['TexGyreTermes'] mt-2">O anfitrião marcou que este convidado é uma criança.</p>
                   <div className="flex justify-between items-start mt-2">
-                    <label className="text-sm text-[#CFAA93] font-['TexGyreTermes'] mt-1">Idade da criança em 30/08/2025:</label>
+                    <label className="text-sm text-[#F2B21C] font-['TexGyreTermes'] mt-1">Idade da criança em 30/08/2025:</label>
                     <input
                       type="number"
                       name={`idade-${index}`}
                       defaultValue={convidado.status !== 0 && convidado.idade ? convidado.idade : ""}
                       required
-                      className="w-20 px-3 py-1.5 rounded-xl bg-white/10 border border-[#CFAA93]/50 text-[#CFAA93] placeholder-[#CFAA93]/60 font-['TexGyreTermes']"
+                      className="w-20 px-3 py-1.5 rounded-xl bg-white/10 border border-[#F2B21C]/50 text-[#F2B21C] placeholder-[#F2B21C]/60 font-['TexGyreTermes']"
                     />
                   </div>
                 </>
@@ -175,15 +175,15 @@ const Wishes = ({ convidados = [] }) => {
             </div>
           ))}
 
-          <div className="space-y-4 pt-6 border-t border-[#CFAA93]/30">
+          <div className="space-y-4 pt-6 border-t border-[#F2B21C]/30">
             <div>
-              <label className="block text-sm text-[#CFAA93] font-['TexGyreTermes']">Seu e-mail</label>
+              <label className="block text-sm text-[#F2B21C] font-['TexGyreTermes']">Seu e-mail</label>
               <input
                 type="email"
                 name="email"
                 placeholder="Digite seu e-mail"
                 required
-                className="w-full px-4 py-2 rounded-xl bg-white/10 border border-[#CFAA93]/50 text-[#CFAA93] placeholder-[#CFAA93]/60 font-['TexGyreTermes']"
+                className="w-full px-4 py-2 rounded-xl bg-white/10 border border-[#F2B21C]/50 text-[#F2B21C] placeholder-[#F2B21C]/60 font-['TexGyreTermes']"
               />
             </div>
           </div>
@@ -191,7 +191,7 @@ const Wishes = ({ convidados = [] }) => {
           <div className="flex justify-end pt-4">
             <button
               type="submit"
-              className="px-6 py-2.5 rounded-xl bg-[#CFAA93] hover:bg-[#bfa67e] text-black font-['TexGyreTermes']"
+              className="px-6 py-2.5 rounded-xl bg-[#F2B21C] hover:bg-[#bfa67e] text-black font-['TexGyreTermes']"
             >
               {convidadosMock.some(c => c.status === 1 || c.status === 2) ? "Editar" : "Enviar confirmação"}
             </button>
@@ -200,7 +200,7 @@ const Wishes = ({ convidados = [] }) => {
 
         {showModal && (
           <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-            <div className="bg-[#0f3e57] p-6 rounded-lg max-w-md w-full text-center space-y-4 text-[#CFAA93] font-['TexGyreTermes']">
+            <div className="bg-[#0f3e57] p-6 rounded-lg max-w-md w-full text-center space-y-4 text-[#F2B21C] font-['TexGyreTermes']">
               <h3 className="text-xl font-semibold">
                 {convidadosMock.some(c => c.status === 1 || c.status === 2)
                   ? "Você está editando sua confirmação de presença:"
@@ -221,7 +221,7 @@ const Wishes = ({ convidados = [] }) => {
               </ul>
               <div className="flex justify-center gap-4 pt-4">
                 <button
-                  className="px-4 py-2 bg-[#CFAA93] text-black rounded flex items-center justify-center gap-2"
+                  className="px-4 py-2 bg-[#F2B21C] text-black rounded flex items-center justify-center gap-2"
                   onClick={enviarConfirmacao}
                   disabled={carregando}
                 >
@@ -235,7 +235,7 @@ const Wishes = ({ convidados = [] }) => {
                   )}
                 </button>
                 <button
-                  className="px-4 py-2 border border-[#CFAA93] text-[#CFAA93] rounded"
+                  className="px-4 py-2 border border-[#F2B21C] text-[#F2B21C] rounded"
                   onClick={() => setShowModal(false)}
                 >
                   Editar
@@ -247,11 +247,11 @@ const Wishes = ({ convidados = [] }) => {
 
         {erroEnvio && (
           <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-            <div className="bg-[#0f3e57] p-6 rounded-lg max-w-md w-full text-center space-y-4 text-[#CFAA93] font-['TexGyreTermes']">
+            <div className="bg-[#0f3e57] p-6 rounded-lg max-w-md w-full text-center space-y-4 text-[#F2B21C] font-['TexGyreTermes']">
               <h3 className="text-xl font-semibold text-red-500">Erro</h3>
-              <p className="text-sm text-[#CFAA93]">{erroEnvio}</p>
+              <p className="text-sm text-[#F2B21C]">{erroEnvio}</p>
               <button
-                className="px-4 py-2 border border-[#CFAA93] text-[#CFAA93] rounded"
+                className="px-4 py-2 border border-[#F2B21C] text-[#F2B21C] rounded"
                 onClick={() => setErroEnvio("")}
               >
                 Fechar
@@ -262,14 +262,14 @@ const Wishes = ({ convidados = [] }) => {
         
         {envioFinalizado && (
           <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-            <div className="bg-[#0f3e57] p-6 rounded-lg max-w-md w-full text-center space-y-4 text-[#CFAA93] font-['TexGyreTermes']">
+            <div className="bg-[#0f3e57] p-6 rounded-lg max-w-md w-full text-center space-y-4 text-[#F2B21C] font-['TexGyreTermes']">
               <h3 className="text-xl font-semibold">Confirmação registrada!</h3>
               <p className="text-sm">
                 Agradecemos por confirmar sua presença. Esperamos por você na formatura! 📩
                 Você receberá um e-mail de confirmação em instantes — verifique sua caixa de entrada.
               </p>
               <button
-                className="px-4 py-2 bg-[#CFAA93] text-black rounded"
+                className="px-4 py-2 bg-[#F2B21C] text-black rounded"
                 onClick={() => setEnvioFinalizado(false)}
               >
                 Fechar

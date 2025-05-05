@@ -111,7 +111,7 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
         className="min-h-screen relative overflow-hidden flex flex-col justify-between h-screen"
       >
         {import.meta.env.VITE_AMBIENTE === 'HML' && (
-          <div className="bg-red-600 text-white text-center py-2 font-semibold uppercase tracking-wide z-50 relative">
+          <div className="bg-red-600 text-black text-center py-2 font-semibold uppercase tracking-wide z-50 relative">
             AMBIENTE DE HOMOLOGAÇÃO
           </div>
         )}
@@ -129,7 +129,7 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
           >
             {/* Card Container */}
             <div
-              className="relative overflow-hidden w-full h-full p-0 sm:p-8 md:p-10 sm:rounded-2xl sm:border border-yellow-100/50 shadow-xl text-[#CFAA93]"
+              className="relative overflow-hidden w-full h-full p-0 sm:p-8 md:p-10 sm:rounded-2xl sm:border border-yellow-100/50 shadow-xl text-[#F2B21C]"
               style={{
                 marginTop: '2vh',
                 height: '90vh',
@@ -139,9 +139,9 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
               <div className="relative z-10 h-full">
                 {/* Top Decorative Line */}
                 <div className="flex items-center justify-center gap-3 mb-6 sm:mb-8">
-                  <div className="h-px w-12 sm:w-16 bg-[#CFAA93]/50" />
-                  <div className="w-2 h-2 rounded-full bg-[#CFAA93]" />
-                  <div className="h-px w-12 sm:w-16 bg-[#CFAA93]/50" />
+                  <div className="h-px w-12 sm:w-16 bg-[#F2B21C]/50" />
+                  <div className="w-2 h-2 rounded-full bg-[#F2B21C]" />
+                  <div className="h-px w-12 sm:w-16 bg-[#F2B21C]/50" />
                 </div>
 
                 {/* Foto e Campo de Código */}
@@ -155,22 +155,22 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
                     <div className="flex justify-center">
                       <img src={logoPuc} alt="Logo PUC" className="h-24 sm:h-28 md:h-32 object-contain" />
                     </div>
-                    <h1 className="text-3xl sm:text-4xl md:text-5xl font-['Alex_Brush'] text-[#CFAA93]">
+                    <h1 className="text-3xl sm:text-4xl md:text-5xl font-['Alex_Brush'] text-[#F2B21C]">
                       João Pedro Vargas da Silva
                     </h1>
-                    <p className="text-sm sm:text-base font-['TexGyreTermes'] text-[#CFAA93]">
+                    <p className="text-sm sm:text-base font-['TexGyreTermes'] text-[#F2B21C]">
                       E SUA FAMÍLIA SENTEM-SE HONRADOS EM CONVIDÁ-LOS PARA A SUA FORMATURA EM
                     </p>
-                    <h1 className="text-2xl sm:text-4xl md:text-5xl font-['Alex_Brush'] text-[#CFAA93]">
+                    <h1 className="text-2xl sm:text-4xl md:text-5xl font-['Alex_Brush'] text-[#F2B21C]">
                       Análise e Desenvolvimento de Sistemas
                     </h1>
                   </div>
 
                   <div className="w-full flex flex-col items-center gap-3 mb-4 sm:mb-6">
-                    <p className="text-sm sm:text-base font-['TexGyreTermes'] text-[#CFAA93]">
+                    <p className="text-sm sm:text-base font-['TexGyreTermes'] text-[#F2B21C]">
                       Digite o código de 4 dígitos que está no cartão com o QRCode.
                       <span className="relative group inline-block ml-2 cursor-pointer">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 inline text-[#CFAA93]" viewBox="0 0 20 20" fill="currentColor">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 inline text-[#F2B21C]" viewBox="0 0 20 20" fill="currentColor">
                           <path fillRule="evenodd" d="M18 10A8 8 0 11 2 10a8 8 0 0116 0zm-8 3a1 1 0 01-1-1v-1a1 1 0 112 0v1a1 1 0 01-1 1zm-1-6a1 1 0 012 0v1a1 1 0 11-2 0V7z" clipRule="evenodd" />
                         </svg>
                         <div className="absolute hidden group-hover:block group-focus:block z-10 top-full right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg p-2 w-60">
@@ -188,13 +188,13 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
                     />
                     <button
                       onClick={handleEnter}
-                      className="bg-[#CFAA93] text-black px-6 py-2 rounded-md hover:bg-[#bfa67e] transition font-['TexGyreTermes']"
+                      className="bg-[#F2B21C] text-black px-6 py-2 rounded-md hover:bg-[#bfa67e] transition font-['TexGyreTermes']"
                     >
                       Entrar no convite
                     </button>
                     <button
                       onClick={() => setShowPhoneModal(true)}
-                      className="text-sm font-['TexGyreTermes'] text-[#CFAA93] underline hover:text-[#bfa67e]"
+                      className="text-sm font-['TexGyreTermes'] text-[#F2B21C] underline hover:text-[#bfa67e]"
                     >
                       Buscar código do convite pelo telefone
                     </button>
@@ -202,7 +202,7 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
                       href="https://wa.me/5551996121240"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-sm font-['TexGyreTermes'] text-[#CFAA93] underline hover:text-[#bfa67e] mt-2"
+                      className="text-sm font-['TexGyreTermes'] text-[#F2B21C] underline hover:text-[#bfa67e] mt-2"
                     >
                       Dúvidas? Clique aqui para entrar em contato.
                     </a>
@@ -216,12 +216,12 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
 
       {showModal && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-70 z-50">
-          <div className="bg-[#0d2931] text-[#CFAA93] p-6 rounded-lg shadow-lg max-w-md w-full mx-4">
+          <div className="bg-[#0d2931] text-[#F2B21C] p-6 rounded-lg shadow-lg max-w-md w-full mx-4">
             <h2 className="text-xl font-bold mb-2 font-['TexGyreTermes']">Código não encontrado</h2>
             <p className="text-sm font-['TexGyreTermes']">{modalMessage}</p>
             <button
               onClick={() => setShowModal(false)}
-              className="mt-4 px-4 py-2 bg-[#CFAA93] text-black rounded-md hover:bg-[#bfa67e] font-['TexGyreTermes']"
+              className="mt-4 px-4 py-2 bg-[#F2B21C] text-black rounded-md hover:bg-[#bfa67e] font-['TexGyreTermes']"
             >
               Fechar
             </button>
@@ -231,7 +231,7 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
 
       {showPhoneModal && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-70 z-50">
-          <div className="bg-gradient-to-b from-[#0d2931] to-[#091d24] border border-[#CFAA93]/30 text-[#CFAA93] p-6 rounded-2xl shadow-2xl max-w-md w-full mx-4">
+          <div className="bg-gradient-to-b from-[#0d2931] to-[#091d24] border border-[#F2B21C]/30 text-[#F2B21C] p-6 rounded-2xl shadow-2xl max-w-md w-full mx-4">
             <h2 className="text-xl font-bold mb-2 font-['TexGyreTermes']">Buscar código por telefone</h2>
             <InputMask
               mask="(99) 99999-9999"
@@ -244,7 +244,7 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
                   {...inputProps}
                   type="tel"
                   placeholder="Digite seu telefone com DDD"
-                  className="w-full mb-4 px-4 py-2 border border-[#CFAA93]/40 bg-black/20 text-[#CFAA93] rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#CFAA93] text-base font-['TexGyreTermes']"
+                  className="w-full mb-4 px-4 py-2 border border-[#F2B21C]/40 bg-black/20 text-[#F2B21C] rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#F2B21C] text-base font-['TexGyreTermes']"
                 />
               )}
             </InputMask>
@@ -269,7 +269,7 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
                     setPhoneError("Erro ao buscar o código. Tente novamente.");
                   }
                 }}
-                className="bg-[#CFAA93] text-black px-6 py-2 rounded-md hover:bg-[#bfa67e] transition font-['TexGyreTermes']"
+                className="bg-[#F2B21C] text-black px-6 py-2 rounded-md hover:bg-[#bfa67e] transition font-['TexGyreTermes']"
               >
                 Buscar código
               </button>
@@ -280,7 +280,7 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
                   setFoundCode(null);
                   setPhoneError('');
                 }}
-                className="px-6 py-2 bg-[#CFAA93] text-black rounded-md hover:bg-[#bfa67e] font-['TexGyreTermes']"
+                className="px-6 py-2 bg-[#F2B21C] text-black rounded-md hover:bg-[#bfa67e] font-['TexGyreTermes']"
               >
                 Fechar
               </button>
@@ -296,14 +296,14 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
       )}
       {modalMessage && !showModal && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-70 z-50">
-          <div className="bg-[#0d2931] text-[#CFAA93] p-6 rounded-lg shadow-lg max-w-md w-full mx-4">
+          <div className="bg-[#0d2931] text-[#F2B21C] p-6 rounded-lg shadow-lg max-w-md w-full mx-4">
             <h2 className="text-xl font-bold mb-2 font-['TexGyreTermes']">Código não encontrado</h2>
             <p className="text-sm font-['TexGyreTermes']">{modalMessage}</p>
             <button
               onClick={() => {
                 setModalMessage('');
               }}
-              className="mt-4 px-4 py-2 bg-[#CFAA93] text-black rounded-md hover:bg-[#bfa67e] font-['TexGyreTermes']"
+              className="mt-4 px-4 py-2 bg-[#F2B21C] text-black rounded-md hover:bg-[#bfa67e] font-['TexGyreTermes']"
             >
               Fechar
             </button>
@@ -313,7 +313,7 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
 
       {showImportModal && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-70 z-50">
-          <div className="bg-gradient-to-b from-[#0d2931] to-[#091d24] border border-[#CFAA93]/30 text-[#CFAA93] p-6 rounded-2xl shadow-2xl max-w-md w-full mx-4">
+          <div className="bg-gradient-to-b from-[#0d2931] to-[#091d24] border border-[#F2B21C]/30 text-[#F2B21C] p-6 rounded-2xl shadow-2xl max-w-md w-full mx-4">
             <h2 className="text-xl font-bold mb-4 font-['TexGyreTermes']">Importar convidados</h2>
             <form
               onSubmit={async (e) => {
@@ -345,16 +345,16 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
                 name="file"
                 accept=".xlsx"
                 required
-                className="w-full mb-4 px-4 py-2 border border-[#CFAA93]/40 bg-black/20 text-[#CFAA93] rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#CFAA93] text-base font-['TexGyreTermes']"
+                className="w-full mb-4 px-4 py-2 border border-[#F2B21C]/40 bg-black/20 text-[#F2B21C] rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#F2B21C] text-base font-['TexGyreTermes']"
               />
               <div className="flex gap-4">
-                <button type="submit" className="bg-[#CFAA93] text-black px-6 py-2 rounded-md hover:bg-[#bfa67e] transition font-['TexGyreTermes']">
+                <button type="submit" className="bg-[#F2B21C] text-black px-6 py-2 rounded-md hover:bg-[#bfa67e] transition font-['TexGyreTermes']">
                   Importar
                 </button>
                 <button
                   type="button"
                   onClick={() => setShowImportModal(false)}
-                  className="px-6 py-2 bg-[#CFAA93] text-black rounded-md hover:bg-[#bfa67e] font-['TexGyreTermes']"
+                  className="px-6 py-2 bg-[#F2B21C] text-black rounded-md hover:bg-[#bfa67e] font-['TexGyreTermes']"
                 >
                   Cancelar
                 </button>
@@ -366,7 +366,7 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
 
       {showListModal && (
         <div className="fixed inset-0 flex items-start justify-center bg-black bg-opacity-70 z-50 overflow-y-auto pt-10">
-          <div className="bg-gradient-to-b from-[#0d2931] to-[#091d24] border border-[#CFAA93]/30 text-[#CFAA93] p-6 rounded-2xl shadow-2xl max-w-3xl w-full mx-4">
+          <div className="bg-gradient-to-b from-[#0d2931] to-[#091d24] border border-[#F2B21C]/30 text-[#F2B21C] p-6 rounded-2xl shadow-2xl max-w-3xl w-full mx-4">
             <div className="flex justify-between items-center mb-4">
               <div>
                 <p className="font-['TexGyreTermes'] text-sm">
@@ -406,7 +406,7 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
               </div>
               <button
                 onClick={() => setShowListModal(false)}
-                className="text-[#CFAA93] hover:text-[#bfa67e] font-bold text-lg"
+                className="text-[#F2B21C] hover:text-[#bfa67e] font-bold text-lg"
               >
                 ✕
               </button>
@@ -417,7 +417,7 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
               placeholder="Buscar por nome..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full mb-2 px-4 py-2 border border-[#CFAA93]/40 bg-black/20 text-[#CFAA93] rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#CFAA93] text-base font-['TexGyreTermes']"
+              className="w-full mb-2 px-4 py-2 border border-[#F2B21C]/40 bg-black/20 text-[#F2B21C] rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#F2B21C] text-base font-['TexGyreTermes']"
             />
             <div className="flex flex-wrap gap-4 mb-6">
               {[
@@ -470,7 +470,7 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
               })
               .filter((familia) => familia.convidados.length > 0)
               .map((familia, index) => (
-              <div key={index} className="mb-6 border-t border-[#CFAA93]/20 pt-4">
+              <div key={index} className="mb-6 border-t border-[#F2B21C]/20 pt-4">
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="text-lg font-semibold">Família {familia.codigoConvite}</h3>
                   <button
@@ -478,7 +478,7 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
                       setNewGuest(prev => ({ ...prev, codigoConvite: familia.codigoConvite }));
                       setShowAddModal(true);
                     }}
-                    className="bg-[#CFAA93] text-black px-3 py-1 rounded-full hover:bg-[#bfa67e] text-sm"
+                    className="bg-[#F2B21C] text-black px-3 py-1 rounded-full hover:bg-[#bfa67e] text-sm"
                   >
                     +
                   </button>
@@ -500,14 +500,14 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
                       </span>
                       <button
                         onClick={() => atualizarStatus(convidado.idConvidado, 1)}
-                        className="bg-green-600 text-white px-2 py-1 rounded-full text-xs hover:bg-green-700"
+                        className="bg-green-600 text-black px-2 py-1 rounded-full text-xs hover:bg-green-700"
                         title="Confirmar"
                       >
                         Confirmar
                       </button>
                       <button
                         onClick={() => atualizarStatus(convidado.idConvidado, 2)}
-                        className="bg-red-600 text-white px-2 py-1 rounded-full text-xs hover:bg-red-700"
+                        className="bg-red-600 text-black px-2 py-1 rounded-full text-xs hover:bg-red-700"
                         title="Recusar"
                       >
                         Recusar
@@ -530,7 +530,7 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
         )
       )
     }
-    className="ml-2 px-2 py-1 bg-[#CFAA93] text-black rounded-full"
+    className="ml-2 px-2 py-1 bg-[#F2B21C] text-black rounded-full"
   >
     ⋮
   </button>
@@ -596,7 +596,7 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
             ))}
             <button
               onClick={() => setShowAddModal(true)}
-              className="mb-4 px-6 py-2 bg-[#CFAA93] text-black rounded-md hover:bg-[#bfa67e] font-['TexGyreTermes'] w-full"
+              className="mb-4 px-6 py-2 bg-[#F2B21C] text-black rounded-md hover:bg-[#bfa67e] font-['TexGyreTermes'] w-full"
             >
               Adicionar Convidado
             </button>
@@ -604,13 +604,13 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
               href={`${API_URL}/api/exportarListaPDF`}
               target="_blank"
               rel="noopener noreferrer"
-              className="block w-full text-center mt-2 mb-2 bg-[#CFAA93] text-black px-6 py-3 rounded-lg text-base font-semibold hover:bg-[#bfa67e] transition font-['TexGyreTermes']"
+              className="block w-full text-center mt-2 mb-2 bg-[#F2B21C] text-black px-6 py-3 rounded-lg text-base font-semibold hover:bg-[#bfa67e] transition font-['TexGyreTermes']"
             >
               📄 Exportar Lista em PDF
             </a>
             <button
               onClick={() => setShowListModal(false)}
-              className="mt-4 px-6 py-2 bg-[#CFAA93] text-black rounded-md hover:bg-[#bfa67e] font-['TexGyreTermes'] w-full"
+              className="mt-4 px-6 py-2 bg-[#F2B21C] text-black rounded-md hover:bg-[#bfa67e] font-['TexGyreTermes'] w-full"
             >
               Fechar
             </button>
@@ -620,28 +620,28 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
 
       {showAddModal && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-70 z-50">
-          <div className="bg-gradient-to-b from-[#0d2931] to-[#091d24] border border-[#CFAA93]/30 text-[#CFAA93] p-6 rounded-2xl shadow-2xl max-w-md w-full mx-4">
+          <div className="bg-gradient-to-b from-[#0d2931] to-[#091d24] border border-[#F2B21C]/30 text-[#F2B21C] p-6 rounded-2xl shadow-2xl max-w-md w-full mx-4">
             <h2 className="text-xl font-bold mb-4 font-['TexGyreTermes']">Adicionar Convidado</h2>
             <input
               type="text"
               placeholder="Nome"
               value={newGuest.nome}
               onChange={(e) => setNewGuest({ ...newGuest, nome: e.target.value })}
-              className="w-full mb-2 px-4 py-2 border border-[#CFAA93]/40 bg-black/20 text-[#CFAA93] rounded-md"
+              className="w-full mb-2 px-4 py-2 border border-[#F2B21C]/40 bg-black/20 text-[#F2B21C] rounded-md"
             />
             <input
               type="text"
               placeholder="Telefone"
               value={newGuest.telefone}
               onChange={(e) => setNewGuest({ ...newGuest, telefone: e.target.value })}
-              className="w-full mb-2 px-4 py-2 border border-[#CFAA93]/40 bg-black/20 text-[#CFAA93] rounded-md"
+              className="w-full mb-2 px-4 py-2 border border-[#F2B21C]/40 bg-black/20 text-[#F2B21C] rounded-md"
             />
             <input
               type="text"
               placeholder="Código do Convite"
               value={newGuest.codigoConvite}
               onChange={(e) => setNewGuest({ ...newGuest, codigoConvite: e.target.value })}
-              className="w-full mb-2 px-4 py-2 border border-[#CFAA93]/40 bg-black/20 text-[#CFAA93] rounded-md"
+              className="w-full mb-2 px-4 py-2 border border-[#F2B21C]/40 bg-black/20 text-[#F2B21C] rounded-md"
             />
             <label className="flex items-center mb-4">
               <input
@@ -658,7 +658,7 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
                 placeholder="Idade"
                 value={newGuest.idade || ''}
                 onChange={(e) => setNewGuest({ ...newGuest, idade: e.target.value })}
-                className="w-full mb-4 px-4 py-2 border border-[#CFAA93]/40 bg-black/20 text-[#CFAA93] rounded-md"
+                className="w-full mb-4 px-4 py-2 border border-[#F2B21C]/40 bg-black/20 text-[#F2B21C] rounded-md"
               />
             )}
             <div className="flex gap-4">
@@ -695,7 +695,7 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
                     alert('Erro na requisição.');
                   }
                 }}
-                className="bg-[#CFAA93] text-black px-6 py-2 rounded-md hover:bg-[#bfa67e]"
+                className="bg-[#F2B21C] text-black px-6 py-2 rounded-md hover:bg-[#bfa67e]"
               >
                 Salvar
               </button>
@@ -704,7 +704,7 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
                   setShowAddModal(false);
                   setNewGuest({ nome: '', telefone: '', codigoConvite: '', crianca: false });
                 }}
-                className="px-6 py-2 bg-[#CFAA93] text-black rounded-md hover:bg-[#bfa67e]"
+                className="px-6 py-2 bg-[#F2B21C] text-black rounded-md hover:bg-[#bfa67e]"
               >
                 Cancelar
               </button>

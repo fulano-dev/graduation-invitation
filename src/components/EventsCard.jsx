@@ -30,7 +30,7 @@ const Modal = ({ isOpen, onClose, children }) => {
             exit={{ opacity: 0, y: 20 }}
             className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-[70] w-[90%] max-w-sm"
           >
-            <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 shadow-2xl border border-[#CFAA93]">
+            <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 shadow-2xl border border-[#F2B21C]">
               {children}
             </div>
           </motion.div>
@@ -48,7 +48,7 @@ const CalendarButton = ({ icon: Icon, label, onClick, className = "" }) => (
     whileTap={{ scale: 0.98 }}
   >
     <Icon className="w-5 h-5" />
-    <span className="text-[#CFAA93] font-medium">{label}</span>
+    <span className="text-[#F2B21C] font-medium">{label}</span>
   </motion.button>
 );
 
@@ -130,33 +130,33 @@ END:VCALENDAR`;
   return (
     <div className="relative">
       <motion.div
-        className="bg-white/10 backdrop-blur-md rounded-2xl p-6 shadow-sm border border-[#CFAA93] space-y-4"
+        className="bg-white/10 backdrop-blur-md rounded-2xl p-6 shadow-sm border border-[#F2B21C] space-y-4"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
         <div className="flex justify-between items-center">
-          <h3 className="text-xl font-semibold text-[#CFAA93]">{eventData.title.split(' - ')[0]}</h3>
+          <h3 className="text-xl font-semibold text-[#F2B21C]">{eventData.title.split(' - ')[0]}</h3>
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className="text-[#CFAA93] hover:text-[#bfa67e] transition-colors"
+            className="text-[#F2B21C] hover:text-[#bfa67e] transition-colors"
             onClick={() => setShowCalendarModal(true)}
           >
             <CalendarPlus className="w-5 h-5" />
           </motion.button>
         </div>
-        <div className="space-y-3 text-[#CFAA93] font-['TexGyreTermes']">
+        <div className="space-y-3 text-[#F2B21C] font-['TexGyreTermes']">
           <div className="flex items-center space-x-3">
-            <Calendar className="w-5 h-5 text-[#CFAA93]" />
+            <Calendar className="w-5 h-5 text-[#F2B21C]" />
             <span>{formatEventDate(eventData.date)}</span>
           </div>
           <div className="flex items-center space-x-3">
-            <Clock className="w-5 h-5 text-[#CFAA93]" />
+            <Clock className="w-5 h-5 text-[#F2B21C]" />
             <span>{eventData.startTime} - {eventData.endTime}</span>
           </div>
           <div className="flex items-center space-x-3">
-            <MapPin className="w-5 h-5 text-[#CFAA93]" />
+            <MapPin className="w-5 h-5 text-[#F2B21C]" />
             <span>{eventData.location}</span>
           </div>
         </div>
@@ -168,12 +168,12 @@ END:VCALENDAR`;
       >
         <div className="space-y-6 ">
           <div className="flex justify-between  items-center">
-            <h3 className="text-xl font-semibold text-[#CFAA93]">Adicionar ao Calendário</h3>
+            <h3 className="text-xl font-semibold text-[#F2B21C]">Adicionar ao Calendário</h3>
             <motion.button
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
               onClick={() => setShowCalendarModal(false)}
-              className="text-[#CFAA93] hover:text-[#bfa67e]"
+              className="text-[#F2B21C] hover:text-[#bfa67e]"
             >
               <X className="w-5 h-5" />
             </motion.button>
@@ -181,19 +181,19 @@ END:VCALENDAR`;
 
           <div className="space-y-3">
             <CalendarButton
-              icon={(props) => <Chrome {...props} className="w-5 h-5 text-[#CFAA93]" />}
+              icon={(props) => <Chrome {...props} className="w-5 h-5 text-[#F2B21C]" />}
               label="Google Calendar"
               onClick={() => window.open(googleCalendarLink(), '_blank')}
             />
 
             <CalendarButton
-              icon={(props) => <Apple {...props} className="w-5 h-5 text-[#CFAA93]" />}
+              icon={(props) => <Apple {...props} className="w-5 h-5 text-[#F2B21C]" />}
               label="Apple Calendar"
               onClick={downloadICSFile}
             />
 
             <CalendarButton
-              icon={(props) => <CalendarIcon {...props} className="w-5 h-5 text-[#CFAA93]" />}
+              icon={(props) => <CalendarIcon {...props} className="w-5 h-5 text-[#F2B21C]" />}
               label="Outlook Calendar"
               onClick={downloadICSFile}
             />

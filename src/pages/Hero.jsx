@@ -63,12 +63,12 @@ export default function Hero({ convidados = [] }) {
                 {Object.keys(timeLeft).map((interval) => (
                     <div
                         key={interval}
-                        className="flex flex-col items-center p-3 bg-[#6B4C3B] rounded-xl border border-[#6B4C3B] transition-all duration-500"
+                        className="flex flex-col items-center p-3 bg-[#F2B21D] rounded-xl border border-[#F2B21D] transition-all duration-500"
                     >
-                        <span className="text-xl sm:text-2xl font-['TexGyreTermes'] font-bold text-white">
+                        <span className="text-xl sm:text-2xl font-['TexGyreTermes'] font-bold text-black">
                             {timeLeft[interval]}
                         </span>
-                        <span className="text-xs text-white capitalize font-['TexGyreTermes']">{interval}</span>
+                        <span className="text-xs text-black capitalize font-['TexGyreTermes']">{interval}</span>
                     </div>
                 ))}
             </div>
@@ -102,9 +102,9 @@ export default function Hero({ convidados = [] }) {
                         className="absolute"
                     >
                         <Heart
-                            className={`w-${Math.floor(Math.random() * 2) + 8} h-${Math.floor(Math.random() * 2) + 8} ${i % 3 === 0 ? 'text-[#CFAA93]' :
-                                i % 3 === 1 ? 'text-[#CFAA93]' :
-                                    'text-[#CFAA93]'
+                            className={`w-${Math.floor(Math.random() * 2) + 8} h-${Math.floor(Math.random() * 2) + 8} ${i % 3 === 0 ? 'text-[#F2B21C]' :
+                                i % 3 === 1 ? 'text-[#F2B21C]' :
+                                    'text-[#F2B21C]'
                                 }`}
                             fill="currentColor"
                         />
@@ -125,7 +125,7 @@ export default function Hero({ convidados = [] }) {
             </Helmet>
             <section id="home" className="min-h-screen flex flex-col items-center justify-center px-4 py-16 sm:py-20 text-center relative overflow-hidden">
                 {import.meta.env.VITE_AMBIENTE === 'HML' && (
-                    <div className="bg-red-600 text-white text-center py-4 px-4 mb-6 shadow-md w-full">
+                    <div className="bg-red-600 text-black text-center py-4 px-4 mb-6 shadow-md w-full">
                         <h2 className="text-lg sm:text-2xl font-['TexGyreTermes'] font-bold uppercase">AMBIENTE DE HOMOLOGAÇÃO</h2>
                         <p className="text-xs sm:text-sm mt-1 font-['TexGyreTermes']">
                           Esta página é destinada apenas para testes. As confirmações feitas aqui não afetarão a lista oficial de convidados.
@@ -143,7 +143,7 @@ export default function Hero({ convidados = [] }) {
                             initial={{ scale: 0.8, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
                             transition={{ delay: 0.6 }}
-                            className="text-4xl sm:text-5xl font-['Alex_Brush'] text-[#CFAA93]"
+                            className="text-4xl sm:text-5xl font-['Alex_Brush'] text-[#F2B21C]"
                         >
                             João Pedro Vargas da Silva
                         </motion.h2>
@@ -156,9 +156,9 @@ export default function Hero({ convidados = [] }) {
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true }}
                             transition={{ delay: 0.4 }}
-                            className="text-[#CFAA93] max-w-md mx-auto space-y-2 font-['TexGyreTermes']"
+                            className="text-[#F2B21C] max-w-md mx-auto space-y-2 font-['TexGyreTermes']"
                         >
-                      <p className="text-center font-['TexGyreTermes'] text-[#CFAA93] text-[11px]">
+                      <p className="text-center font-['TexGyreTermes'] text-[#F2B21C] text-[11px]">
                             E SUA FAMÍLIA SENTEM-SE HONRADOS EM CONVIDÁ-LOS PARA A RECEPÇÃO DE SUA FORMATURA EM
                             </p>
                             
@@ -167,12 +167,12 @@ export default function Hero({ convidados = [] }) {
                             initial={{ scale: 0.8, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
                             transition={{ delay: 0.6 }}
-                            className="text-2xl sm:text-5xl font-['Alex_Brush'] text-[28px] text-[#CFAA93]"
+                            className="text-2xl sm:text-5xl font-['Alex_Brush'] text-[28px] text-[#F2B21C]"
                         >
                             Análise e Desenvolvimento de Sistemas
                         </motion.h2>
 
-                        <div className="relative w-full max-w-2xl aspect-[2/3] mx-auto mt-8 overflow-hidden rounded-xl border-4 border-[#CFAA93]">
+                        <div className="relative w-full max-w-2xl aspect-[2/3] mx-auto mt-8 overflow-hidden rounded-xl border-4 border-[#F2B21C]">
                           <AnimatePresence mode="wait">
                             <motion.img
                               key={images[currentImageIndex]}
@@ -190,7 +190,7 @@ export default function Hero({ convidados = [] }) {
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             transition={{ delay: 0.4 }}
-                            className="text-[#CFAA93] font-['TexGyreTermes'] font-light italic text-base sm:text-lg"
+                            className="text-[#F2B21C] font-['TexGyreTermes'] font-light italic text-base sm:text-lg"
                         >
                            Quero comemorar esta conquista com você!
                         </motion.p>
@@ -204,7 +204,7 @@ export default function Hero({ convidados = [] }) {
                         transition={{ delay: 0.2 }}
                         className="inline-block mx-auto"
                     >
-                        <span className="px-4 py-1 text-sm bg-[#6B4C3B] text-[#FFF] rounded-full border border-[#6B4C3B]">
+                        <span className="px-4 py-1 text-sm bg-[#F2B21D] text-[#FFF] rounded-full border border-[#F2B21D]">
                             #SaveTheDate 🎓
                         </span>
                     </motion.div>
@@ -217,9 +217,9 @@ export default function Hero({ convidados = [] }) {
                     >
                         <div className="absolute inset-0 rounded-2xl" />
 
-                        <div className="relative px-4 sm:px-8 py-8 sm:py-10 rounded-2xl border border-[#CFAA93]/50">
+                        <div className="relative px-4 sm:px-8 py-8 sm:py-10 rounded-2xl border border-[#F2B21C]/50">
                             <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-px">
-                                <div className="w-20 sm:w-32 h-[2px] bg-gradient-to-r from-transparent via-[#CFAA93] to-transparent" />
+                                <div className="w-20 sm:w-32 h-[2px] bg-gradient-to-r from-transparent via-[#F2B21C] to-transparent" />
                             </div>
 
                             <div className="space-y-6 text-center">
@@ -230,8 +230,8 @@ export default function Hero({ convidados = [] }) {
                                         transition={{ delay: 0.9 }}
                                         className="flex items-center justify-center space-x-2"
                                     >
-                                        <Calendar className="w-4 h-4 text-[#CFAA93]" />
-                                        <span className="text-[#CFAA93] font-['TexGyreTermes'] font-medium text-sm sm:text-base">
+                                        <Calendar className="w-4 h-4 text-[#F2B21C]" />
+                                        <span className="text-[#F2B21C] font-['TexGyreTermes'] font-medium text-sm sm:text-base">
                                             {formatEventDate(config.data.date, "full")}
                                         </span>
                                     </motion.div>
@@ -242,17 +242,17 @@ export default function Hero({ convidados = [] }) {
                                         transition={{ delay: 1 }}
                                         className="flex items-center justify-center space-x-2"
                                     >
-                                        <Clock className="w-4 h-4 text-[#CFAA93]" />
-                                        <span className="text-[#CFAA93] font-['TexGyreTermes'] font-medium text-sm sm:text-base">
+                                        <Clock className="w-4 h-4 text-[#F2B21C]" />
+                                        <span className="text-[#F2B21C] font-['TexGyreTermes'] font-medium text-sm sm:text-base">
                                             {config.data.time}
                                         </span>
                                     </motion.div>
                                 </div>
 
                                 <div className="flex items-center justify-center gap-3">
-                                    <div className="h-px w-8 sm:w-12 bg-[#CFAA93]/50" />
-                                    <div className="w-2 h-2 rounded-full bg-[#CFAA93]" />
-                                    <div className="h-px w-8 sm:w-12 bg-[#CFAA93]/50" />
+                                    <div className="h-px w-8 sm:w-12 bg-[#F2B21C]/50" />
+                                    <div className="w-2 h-2 rounded-full bg-[#F2B21C]" />
+                                    <div className="h-px w-8 sm:w-12 bg-[#F2B21C]/50" />
                                 </div>
 
                                 <motion.div
@@ -261,10 +261,10 @@ export default function Hero({ convidados = [] }) {
                                     transition={{ delay: 1.1 }}
                                     className="space-y-2"
                                 >
-                                        <p className="text-[#CFAA93] font-['TexGyreTermes'] font-serif italic text-sm">
+                                        <p className="text-[#F2B21C] font-['TexGyreTermes'] font-serif italic text-sm">
                                           {convidados.length > 1 ? "Queridos" : "Querido"}
                                         </p>
-                                        <p className="text-[#CFAA93] font-['TexGyreTermes'] font-semibold text-xl sm:text-2xl">
+                                        <p className="text-[#F2B21C] font-['TexGyreTermes'] font-semibold text-xl sm:text-2xl">
                                           {convidados.map((c, i) => {
                                             const isLast = i === convidados.length - 1;
                                             const isSecondLast = i === convidados.length - 2;
@@ -275,12 +275,12 @@ export default function Hero({ convidados = [] }) {
                             </div>
 
                             <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-px">
-                                <div className="w-20 sm:w-32 h-[2px] bg-gradient-to-r from-transparent via-[#CFAA93] to-transparent" />
+                                <div className="w-20 sm:w-32 h-[2px] bg-gradient-to-r from-transparent via-[#F2B21C] to-transparent" />
                             </div>
                         </div>
 
-                        <div className="absolute -top-2 -right-2 w-16 sm:w-24 h-16 sm:h-24 bg-[#CFAA93]/20 rounded-full blur-xl" />
-                        <div className="absolute -bottom-2 -left-2 w-16 sm:w-24 h-16 sm:h-24 bg-[#CFAA93]/20 rounded-full blur-xl" />
+                        <div className="absolute -top-2 -right-2 w-16 sm:w-24 h-16 sm:h-24 bg-[#F2B21C]/20 rounded-full blur-xl" />
+                        <div className="absolute -bottom-2 -left-2 w-16 sm:w-24 h-16 sm:h-24 bg-[#F2B21C]/20 rounded-full blur-xl" />
                     </motion.div>   
                 </motion.div>
             </section>
