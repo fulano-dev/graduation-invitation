@@ -2,14 +2,14 @@ import logoPuc from '@/photos/logo-puc.png';
 import backgroundImg from '@/photos/foto-background.jpeg';
 import infoIcon from '@/photos/info.png';
 import config from '@/config/config';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { formatEventDate } from '@/lib/formatEventDate';
 import { motion } from 'framer-motion';
 import InputMask from 'react-input-mask';
 const API_URL = import.meta.env.VITE_URL_API;
 
 const LandingPage = ({ onOpenInvitation, setConvidados }) => {
-  const [code, setCode] = useState('');
+  const [code, setCode] = useState(() => localStorage.getItem('codigoConvite') || '');
   const [showModal, setShowModal] = useState(false);
   const [modalMessage, setModalMessage] = useState('');
   const [showPhoneModal, setShowPhoneModal] = useState(false);
@@ -23,6 +23,16 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
   const [selectedFilters, setSelectedFilters] = useState([]);
   const [showAddModal, setShowAddModal] = useState(false);
   const [newGuest, setNewGuest] = useState({ nome: '', telefone: '', codigoConvite: '', crianca: false });
+  const [showEntregueModal, setShowEntregueModal] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    // Recupera o código salvo no localStorage ao montar o componente
+    const savedCode = localStorage.getItem('codigoConvite');
+    if (savedCode && savedCode !== code) {
+      setCode(savedCode);
+    }
+  }, []);
 
   const atualizarStatus = async (idConvidado, novoStatus) => {
     try {
@@ -56,6 +66,7 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
 
   const handleEnter = async () => {
     if (code.length === 4) {
+      setIsLoading(true);
       try {
         const response = await fetch(`${API_URL}/api/buscaConvite`, {
           method: 'POST',
@@ -69,41 +80,61 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
           const senha = prompt("Digite a senha para acessar:");
           if (senha !== "lobo") {
             alert("Senha incorreta.");
+            setIsLoading(false);
             return;
           }
 
           if (code === 'JOAO') {
             setShowImportModal(true);
+            setIsLoading(false);
             return;
           } else if (code === "LIST") {
             const res = await fetch(`${API_URL}/api/listarConvidadosPorFamilia`);
             const data = await res.json();
             if (res.ok && typeof data === 'object') {
-              const familiasConvertidas = Object.entries(data).map(([codigoConvite, convidados]) => ({
+              const familiasConvertidas = Object.entries(data).map(([codigoConvite, grupo]) => ({
                 codigoConvite,
-                convidados,
+                ...grupo,
               }));
               setFamilias(familiasConvertidas);
             }
             setShowListModal(true);
+            setIsLoading(false);
             return;
           }
         } else if (response.ok && data.convidados && data.convidados.length > 0 && data.codigoValido !== false) {
+          if (data.entregue === false) {
+            setShowEntregueModal(true);
+            setModalMessage(data.convidados[0]?.nome || '');
+            setIsLoading(false);
+            return;
+          }
           setConvidados(data.convidados);
           onOpenInvitation();
+          setIsLoading(false);
         } else {
           setModalMessage('Não encontramos convidado com esse código. Tente usar os 4 últimos números do telefone de algum dos convidados da sua família ou usar a opção "Buscar código do convite pelo telefone". Se não conseguir, entre em contato com o João.');
           setShowModal(true);
+          setIsLoading(false);
         }
       } catch (error) {
         console.error('Erro ao validar código:', error);
         alert('Erro ao validar o código. Tente novamente mais tarde.');
+        setIsLoading(false);
       }
     }
   };
 
   return (
     <>
+      {isLoading && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-70 z-50">
+          <div className="text-center text-[#F2B21C] font-['TexGyreTermes']">
+            <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-[#F2B21C] border-opacity-50 mx-auto mb-4"></div>
+            <p className="text-lg">Buscando convite...</p>
+          </div>
+        </div>
+      )}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -181,10 +212,14 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
                     <input
                       type="text"
                       maxLength={4}
-                      value={code}
-                      onChange={(e) => setCode(e.target.value)}
-                      placeholder="Digite seu código de convite"
-                      className="w-full text-center px-4 py-2 border border-[#0047AB] rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#0047AB] text-gray-800 text-lg font-medium font-['TexGyreTermes']"
+                    value={code}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setCode(value);
+                      localStorage.setItem('codigoConvite', value);
+                    }}
+                    placeholder="Digite seu código de convite"
+                    className="w-full text-center px-4 py-2 border border-[#0047AB] rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#0047AB] text-gray-800 text-lg font-medium font-['TexGyreTermes']"
                     />
                     <button
                       onClick={handleEnter}
@@ -294,19 +329,32 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
           </div>
         </div>
       )}
-      {modalMessage && !showModal && (
+
+      {showEntregueModal && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-70 z-50">
           <div className="bg-[#0d2931] text-[#F2B21C] p-6 rounded-lg shadow-lg max-w-md w-full mx-4">
-            <h2 className="text-xl font-bold mb-2 font-['TexGyreTermes']">Código não encontrado</h2>
-            <p className="text-sm font-['TexGyreTermes']">{modalMessage}</p>
-            <button
-              onClick={() => {
-                setModalMessage('');
-              }}
-              className="mt-4 px-4 py-2 bg-[#F2B21C] text-black rounded-md hover:bg-[#bfa67e] font-['TexGyreTermes']"
-            >
-              Fechar
-            </button>
+            <h2 className="text-xl font-bold mb-2 font-['TexGyreTermes']">Calma, {modalMessage}!</h2>
+            <p className="text-sm font-['TexGyreTermes']">
+              Localizamos seu convite, mas parece que seu convite físico ainda não foi entregue. Assim que receber, você poderá acessar normalmente o convite virtual.
+              <br /><br />
+              Se você já recebeu o convite físico, clique abaixo para nos avisar.
+            </p>
+            <div className="mt-4 flex gap-4">
+              <button
+                onClick={() => setShowEntregueModal(false)}
+                className="px-4 py-2 bg-[#F2B21C] text-black rounded-md hover:bg-[#bfa67e] font-['TexGyreTermes']"
+              >
+                Fechar
+              </button>
+              <a
+                href="https://wa.me/5551996121240?text=Oi%20Jo%C3%A3o%2C%20fui%20acessar%20o%20convite%20virtual%20e%20aparece%20que%20ainda%20n%C3%A3o%20foi%20entregue."
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-4 py-2 bg-[#F2B21C] text-black rounded-md hover:bg-[#bfa67e] font-['TexGyreTermes'] text-center"
+              >
+                Já recebi meu convite
+              </a>
+            </div>
           </div>
         </div>
       )}
@@ -376,6 +424,19 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
                   <strong>Total de Famílias:</strong> {familias.length}
                 </p>
                 <p className="font-['TexGyreTermes'] text-sm">
+                  <strong>Total de Crianças:</strong> {
+                    familias.reduce((acc, f) =>
+                      acc + f.convidados.filter(c => c.crianca).length
+                    , 0)
+                  }
+                </p>
+                <p className="font-['TexGyreTermes'] text-sm">
+                  <strong>Convites Entregues:</strong> {familias.filter(f => f.entregue).length}
+                </p>
+                <p className="font-['TexGyreTermes'] text-sm">
+                  <strong>Restantes para Entregar:</strong> {familias.filter(f => !f.entregue).length}
+                </p>
+                <p className="font-['TexGyreTermes'] text-sm">
                   <strong>Adultos Confirmados:</strong> {
                     familias.reduce((acc, f) =>
                       acc + f.convidados.filter(c => c.status === 1 && (!c.crianca || (c.idade && c.idade > 10))).length
@@ -424,7 +485,6 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
                 { label: "Confirmados", value: "confirmados" },
                 { label: "Recusados", value: "recusados" },
                 { label: "Pendentes", value: "pendentes" },
-                { label: "Crianças", value: "criancas" },
               ].map(({ label, value }) => (
                 <label key={value} className="flex items-center space-x-2 font-['TexGyreTermes']">
                   <input
@@ -457,10 +517,7 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
                     (selectedFilters.includes("recusados") && convidado.status === 2) ||
                     (selectedFilters.includes("pendentes") && convidado.status === 0);
 
-                  const matchesCrianca =
-                    !selectedFilters.includes("criancas") || Boolean(convidado.crianca);
-
-                  return matchesStatus && matchesCrianca;
+                  return matchesStatus;
                 });
 
                 return {
@@ -470,130 +527,155 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
               })
               .filter((familia) => familia.convidados.length > 0)
               .map((familia, index) => (
-              <div key={index} className="mb-6 border-t border-[#F2B21C]/20 pt-4">
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="text-lg font-semibold">Família {familia.codigoConvite}</h3>
+                <div key={index} className="mb-6 border-t border-[#F2B21C]/20 pt-4">
+                  <div className="flex justify-between items-center">
+                    <h3 className="text-lg font-semibold">
+                      Família {familia.codigoConvite}{' '}
+                      {familia.entregue ? '📦' : '⏳'}
+                    </h3>
+                    <button
+                      onClick={() => {
+                        setNewGuest(prev => ({ ...prev, codigoConvite: familia.codigoConvite }));
+                        setShowAddModal(true);
+                      }}
+                      className="bg-[#F2B21C] text-black px-3 py-1 rounded-full hover:bg-[#bfa67e] text-sm"
+                    >
+                      +
+                    </button>
+                  </div>
+                  {familia.convidados.map((convidado) => (
+                    <div key={convidado.idConvidado} className="flex justify-between items-center mb-2 p-2 bg-black/20 rounded-md">
+                        <span className="text-sm">
+                          {convidado.nome}
+                          {convidado.crianca && (
+                            <>
+                              {' '}👶
+                              {convidado.idade ? ` (${convidado.idade} anos)` : ''}
+                            </>
+                          )}
+                        </span>
+                      <div className="flex items-center gap-2">
+                        <span title={convidado.status === 1 ? "Confirmado" : convidado.status === 2 ? "Recusado" : "Pendente"}>
+                          {convidado.status === 1 ? "✅" : convidado.status === 2 ? "❌" : "⚠️"}
+                        </span>
+                        <button
+                          onClick={() => atualizarStatus(convidado.idConvidado, 1)}
+                          className="bg-green-600 text-black px-2 py-1 rounded-full text-xs hover:bg-green-700"
+                          title="Confirmar"
+                        >
+                          Confirmar
+                        </button>
+                        <button
+                          onClick={() => atualizarStatus(convidado.idConvidado, 2)}
+                          className="bg-red-600 text-black px-2 py-1 rounded-full text-xs hover:bg-red-700"
+                          title="Recusar"
+                        >
+                          Recusar
+                        </button>
+                        <div className="relative inline-block text-left">
+                          <button
+                            onClick={() =>
+                              setFamilias((prev) =>
+                                prev.map((f) =>
+                                  f.codigoConvite === familia.codigoConvite
+                                    ? {
+                                        ...f,
+                                        convidados: f.convidados.map((c) =>
+                                          c.idConvidado === convidado.idConvidado
+                                            ? { ...c, showMenu: !c.showMenu }
+                                            : { ...c, showMenu: false }
+                                        ),
+                                      }
+                                    : f
+                                )
+                              )
+                            }
+                            className="ml-2 px-2 py-1 bg-[#F2B21C] text-black rounded-full"
+                          >
+                            ⋮
+                          </button>
+
+                          {convidado.showMenu && (
+                            <div className="absolute z-10 mt-2 right-0 w-48 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5">
+                              <button
+                                onClick={() => atualizarStatus(convidado.idConvidado, 0)}
+                                className="block w-full px-4 py-2 text-left text-yellow-700 hover:bg-yellow-50"
+                              >
+                                ⚠️ Pendente
+                              </button>
+                              <button
+                                onClick={() => {
+                                  const confirmar = window.confirm("Tem certeza que deseja excluir este convidado?");
+                                  if (!confirmar) return;
+                                  fetch(`${API_URL}/api/deletarConvidado`, {
+                                    method: "POST",
+                                    headers: { "Content-Type": "application/json" },
+                                    body: JSON.stringify({ idConvidado: convidado.idConvidado }),
+                                  }).then(async (response) => {
+                                    if (response.ok) {
+                                      const res = await fetch(`${API_URL}/api/listarConvidadosPorFamilia`);
+                                      const data = await res.json();
+                                      if (res.ok && typeof data === "object") {
+                                        const familiasConvertidas = Object.entries(data).map(([codigoConvite, grupo]) => ({
+                                          codigoConvite,
+                                          ...grupo,
+                                        }));
+                                        setFamilias(familiasConvertidas);
+                                      }
+                                    } else {
+                                      alert("Erro ao excluir convidado.");
+                                    }
+                                  }).catch(() => alert("Erro na requisição."));
+                                }}
+                                className="block w-full px-4 py-2 text-left text-gray-700 hover:bg-gray-100"
+                              >
+                                🗑️ Excluir
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setNewGuest({
+                                    idConvidado: convidado.idConvidado,
+                                    nome: convidado.nome,
+                                    telefone: convidado.telefone || '',
+                                    codigoConvite: familia.codigoConvite,
+                                    crianca: !!convidado.crianca,
+                                  });
+                                  setShowAddModal(true);
+                                }}
+                                className="block w-full px-4 py-2 text-left text-blue-700 hover:bg-blue-50"
+                              >
+                                ✏️ Editar
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                   <button
-                    onClick={() => {
-                      setNewGuest(prev => ({ ...prev, codigoConvite: familia.codigoConvite }));
-                      setShowAddModal(true);
+                    onClick={async () => {
+                      const endpoint = familia.entregue ? '/api/marcarNaoEntregue' : '/api/marcarEntregue';
+                      await fetch(`${API_URL}${endpoint}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ codigoConvite: familia.codigoConvite })
+                      });
+                      const res = await fetch(`${API_URL}/api/listarConvidadosPorFamilia`);
+                      const data = await res.json();
+                      if (res.ok && typeof data === 'object') {
+                        const familiasConvertidas = Object.entries(data).map(([codigoConvite, grupo]) => ({
+                          codigoConvite,
+                          ...grupo,
+                        }));
+                        setFamilias(familiasConvertidas);
+                      }
                     }}
-                    className="bg-[#F2B21C] text-black px-3 py-1 rounded-full hover:bg-[#bfa67e] text-sm"
+                    className="mt-2 bg-[#F2B21C] text-black px-3 py-1 rounded-full hover:bg-[#bfa67e] text-sm"
                   >
-                    +
+                    {familia.entregue ? 'Desfazer Entrega' : 'Entregar Convite'}
                   </button>
                 </div>
-                {familia.convidados.map((convidado) => (
-                  <div key={convidado.idConvidado} className="flex justify-between items-center mb-2 p-2 bg-black/20 rounded-md">
-                      <span className="text-sm">
-                        {convidado.nome}
-                        {convidado.crianca && (
-                          <>
-                            {' '}👶
-                            {convidado.idade ? ` (${convidado.idade} anos)` : ''}
-                          </>
-                        )}
-                      </span>
-                    <div className="flex items-center gap-2">
-                      <span title={convidado.status === 1 ? "Confirmado" : convidado.status === 2 ? "Recusado" : "Pendente"}>
-                        {convidado.status === 1 ? "✅" : convidado.status === 2 ? "❌" : "⚠️"}
-                      </span>
-                      <button
-                        onClick={() => atualizarStatus(convidado.idConvidado, 1)}
-                        className="bg-green-600 text-black px-2 py-1 rounded-full text-xs hover:bg-green-700"
-                        title="Confirmar"
-                      >
-                        Confirmar
-                      </button>
-                      <button
-                        onClick={() => atualizarStatus(convidado.idConvidado, 2)}
-                        className="bg-red-600 text-black px-2 py-1 rounded-full text-xs hover:bg-red-700"
-                        title="Recusar"
-                      >
-                        Recusar
-                      </button>
-                      <div className="relative inline-block text-left">
-  <button
-    onClick={() =>
-      setFamilias((prev) =>
-        prev.map((f) =>
-          f.codigoConvite === familia.codigoConvite
-            ? {
-                ...f,
-                convidados: f.convidados.map((c) =>
-                  c.idConvidado === convidado.idConvidado
-                    ? { ...c, showMenu: !c.showMenu }
-                    : { ...c, showMenu: false }
-                ),
-              }
-            : f
-        )
-      )
-    }
-    className="ml-2 px-2 py-1 bg-[#F2B21C] text-black rounded-full"
-  >
-    ⋮
-  </button>
-
-  {convidado.showMenu && (
-    <div className="absolute z-10 mt-2 right-0 w-48 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5">
-      <button
-        onClick={() => atualizarStatus(convidado.idConvidado, 0)}
-        className="block w-full px-4 py-2 text-left text-yellow-700 hover:bg-yellow-50"
-      >
-        ⚠️ Pendente
-      </button>
-      <button
-        onClick={() => {
-          const confirmar = window.confirm("Tem certeza que deseja excluir este convidado?");
-          if (!confirmar) return;
-          fetch(`${API_URL}/api/deletarConvidado`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ idConvidado: convidado.idConvidado }),
-          }).then(async (response) => {
-            if (response.ok) {
-              const res = await fetch(`${API_URL}/api/listarConvidadosPorFamilia`);
-              const data = await res.json();
-              if (res.ok && typeof data === "object") {
-                const familiasConvertidas = Object.entries(data).map(([codigoConvite, convidados]) => ({
-                  codigoConvite,
-                  convidados,
-                }));
-                setFamilias(familiasConvertidas);
-              }
-            } else {
-              alert("Erro ao excluir convidado.");
-            }
-          }).catch(() => alert("Erro na requisição."));
-        }}
-        className="block w-full px-4 py-2 text-left text-gray-700 hover:bg-gray-100"
-      >
-        🗑️ Excluir
-      </button>
-      <button
-        onClick={() => {
-          setNewGuest({
-            idConvidado: convidado.idConvidado,
-            nome: convidado.nome,
-            telefone: convidado.telefone || '',
-            codigoConvite: familia.codigoConvite,
-            crianca: !!convidado.crianca,
-          });
-          setShowAddModal(true);
-        }}
-        className="block w-full px-4 py-2 text-left text-blue-700 hover:bg-blue-50"
-      >
-        ✏️ Editar
-      </button>
-    </div>
-  )}
-</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ))}
+              ))}
             <button
               onClick={() => setShowAddModal(true)}
               className="mb-4 px-6 py-2 bg-[#F2B21C] text-black rounded-md hover:bg-[#bfa67e] font-['TexGyreTermes'] w-full"
@@ -680,9 +762,9 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
                       const res = await fetch(`${API_URL}/api/listarConvidadosPorFamilia`);
                       const data = await res.json();
                       if (res.ok && typeof data === 'object') {
-                        const familiasConvertidas = Object.entries(data).map(([codigoConvite, convidados]) => ({
+                        const familiasConvertidas = Object.entries(data).map(([codigoConvite, grupo]) => ({
                           codigoConvite,
-                          convidados,
+                          ...grupo,
                         }));
                         setFamilias(familiasConvertidas);
                       }

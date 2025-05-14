@@ -32,7 +32,7 @@ app.post('/api/buscaConvite', async (req, res) => {
     }
 
     const [rows] = await db.query(
-      "SELECT idConvidado, codigoConvite, nome, idade, email, telefone, status, crianca FROM convidados WHERE codigoConvite = ?",
+      "SELECT idConvidado, codigoConvite, nome, idade, email, telefone, status, crianca, entregue FROM convidados WHERE codigoConvite = ?",
       [codigoConvite]
     );
 
@@ -52,21 +52,23 @@ app.post('/api/buscaConvite', async (req, res) => {
 
     const nomePrincipal = convidadosComBoolean[0]?.nome || 'Alguém';
 
-    if(codigoConvite != 1240){
-    await transporter.sendMail({
-      from: `"João Pedro - Sistema" <${process.env.EMAIL_USER}>`,
-      to: "joaopedrovsilva102@gmail.com",
-      subject: `${nomePrincipal} abriu o convite!`,
-      html: `
-        <div style="background:#000;color:#F2B21C;padding:20px;border-radius:8px;font-family:'TexGyreTermes',sans-serif;">
-          <h2 style="color:#f2c14e;">Convite aberto por ${nomePrincipal}</h2>
-          <p>Veja abaixo o status atual dos convidados deste convite:</p>
-          <ul>${nomesStatus}</ul>
-        </div>
-      `
-    });}
+    if (codigoConvite != 1240) {
+      await transporter.sendMail({
+        from: `"João Pedro - Sistema" <${process.env.EMAIL_USER}>`,
+        to: "joaopedrovsilva102@gmail.com",
+        subject: `${nomePrincipal} abriu o convite!`,
+        html: `
+          <div style="background:#000;color:#F2B21C;padding:20px;border-radius:8px;font-family:'TexGyreTermes',sans-serif;">
+            <h2 style="color:#f2c14e;">Convite aberto por ${nomePrincipal}</h2>
+            <p>Veja abaixo o status atual dos convidados deste convite:</p>
+            <ul>${nomesStatus}</ul>
+          </div>
+        `
+      });
+    }
 
-    return res.status(200).json({ convidados: convidadosComBoolean });
+    const entregue = rows[0]?.entregue === 1;
+    return res.status(200).json({ convidados: convidadosComBoolean, entregue });
   } catch (error) {
     console.error("Erro ao buscar convidados:", error);
     res.status(500).json({ erro: "Erro interno ao buscar os convidados." });
@@ -338,15 +340,18 @@ app.post('/api/importarConvidados', upload.single('arquivo'), async (req, res) =
 app.get('/api/listarConvidadosPorFamilia', async (req, res) => {
   try {
     const [rows] = await db.query(
-      "SELECT idConvidado, nome, codigoConvite, status, crianca, idade, telefone FROM convidados ORDER BY codigoConvite"
+      "SELECT idConvidado, nome, codigoConvite, status, crianca, idade, telefone, entregue FROM convidados ORDER BY codigoConvite"
     );
 
     const familias = {};
     for (const row of rows) {
       if (!familias[row.codigoConvite]) {
-        familias[row.codigoConvite] = [];
+        familias[row.codigoConvite] = {
+          entregue: row.entregue || false,
+          convidados: []
+        };
       }
-      familias[row.codigoConvite].push({
+      familias[row.codigoConvite].convidados.push({
         idConvidado: row.idConvidado,
         nome: row.nome,
         status: row.status,
@@ -581,5 +586,38 @@ app.post('/api/editarConvidado', async (req, res) => {
 
 app.listen(port, () => {
   console.log(`🚀 Servidor rodando em http://localhost:${port}`);
+});
+
+
+// Endpoint para marcar família como entregue
+app.post('/api/marcarEntregue', async (req, res) => {
+  try {
+    const { codigoConvite } = req.body;
+    if (!codigoConvite) {
+      return res.status(400).json({ erro: "Código do convite não fornecido." });
+    }
+
+    await db.query("UPDATE convidados SET entregue = 1 WHERE codigoConvite = ?", [codigoConvite]);
+    res.status(200).json({ mensagem: "Família marcada como entregue com sucesso." });
+  } catch (error) {
+    console.error("Erro ao marcar como entregue:", error);
+    res.status(500).json({ erro: "Erro ao marcar como entregue." });
+  }
+});
+
+// Endpoint para marcar família como não entregue
+app.post('/api/marcarNaoEntregue', async (req, res) => {
+  try {
+    const { codigoConvite } = req.body;
+    if (!codigoConvite) {
+      return res.status(400).json({ erro: "Código do convite não fornecido." });
+    }
+
+    await db.query("UPDATE convidados SET entregue = 0 WHERE codigoConvite = ?", [codigoConvite]);
+    res.status(200).json({ mensagem: "Família marcada como não entregue com sucesso." });
+  } catch (error) {
+    console.error("Erro ao marcar como não entregue:", error);
+    res.status(500).json({ erro: "Erro ao marcar como não entregue." });
+  }
 });
 
