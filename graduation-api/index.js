@@ -4,6 +4,10 @@ import { db } from './db.js';
 import nodemailer from 'nodemailer';
 import multer from 'multer';
 import fs from 'fs';
+import twilio from 'twilio';
+const accountSid = process.env.TWILIO_SID;
+const authToken = process.env.TWILIO_TOKEN;
+const client = twilio(accountSid, authToken);
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
@@ -82,7 +86,12 @@ app.post('/api/confirmarPresenca', async (req, res) => {
     if (!codigoConvite || !emailConfirmacao || !Array.isArray(convidados)) {
       return res.status(400).json({ erro: "Dados incompletos para confirmação." });
     }
-
+     // Busca os convidados antigos antes da atualização para comparar status
+     const [convidadosAntigos] = await db.query(
+      "SELECT idConvidado, telefone, nome, status FROM convidados WHERE codigoConvite = ?",
+      [codigoConvite]
+    );
+    console.log("Antigos ", convidadosAntigos);
     const updatePromises = convidados.map(async (convidado) => {
       const { idConvidado, status, idade, crianca } = convidado;
       return db.query(
@@ -93,10 +102,42 @@ app.post('/api/confirmarPresenca', async (req, res) => {
 
     await Promise.all(updatePromises);
 
+   
+
     await db.query(
       "INSERT INTO Confirmacoes (codigoConvite, dataConfirmacao, emailConfirmacao) VALUES (?, NOW(), ?)",
       [codigoConvite, emailConfirmacao]
     );
+    // Mapeia os convidados para saber quem mudou de pendente (0) para confirmado (1)
+    const convidadosConvertidos = convidados.map(c => {
+      const antigo = convidadosAntigos.find(a => a.idConvidado === c.idConvidado);
+      return {
+        ...c,
+        nome: c.nome || c.nomeConvidado || '',
+        telefone: antigo.telefone,
+        mudouParaConfirmado: antigo?.status === 0 && c.status === 1
+      };
+    });
+    console.log(convidadosConvertidos);
+    // Envia SMS apenas para quem mudou de pendente para confirmado e tem telefone válido
+    for (const convidado of convidadosConvertidos) {
+      if (convidado.mudouParaConfirmado && convidado.telefone && convidado.telefone.replace(/\D/g, '').length >= 10) {
+        const phone = '+55' + convidado.telefone.replace(/\D/g, '');
+        const rawPrimeiroNome = convidado.nome?.split(' ')[0] || '';
+        const sanitizedNome = rawPrimeiroNome.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        const primeiroNome = sanitizedNome.length <= 15 ? sanitizedNome : '';
+        try {
+          await client.messages.create({
+            body: `Oi${primeiroNome ? ' ' + primeiroNome : ''}, presenca confirmada! Te espero dia 30/08 as 20h no Maria Horos Buffet.`,
+            from: '+16814323414',
+            to: phone
+          });
+          console.log("SMS ENVIADO");
+        } catch (smsError) {
+          console.error(`Erro ao enviar SMS de confirmacao para ${phone}:`, smsError.message);
+        }
+      }
+    }
 console.log(convidados)
     const nomesConfirmados = convidados.map((c) => {
       const statusTexto = c.status === 1 ? 'Confirmado' : c.status === 2 ? 'Não comparecerá' : 'Pendente';
@@ -371,21 +412,44 @@ app.get('/api/listarConvidadosPorFamilia', async (req, res) => {
 // Atualiza o status de um convidado para confirmado
 app.post('/api/confirmarConvidado', async (req, res) => {
   try {
-    const { idConvidado } = req.body;
+    const { idConvidado, enviaSMS } = req.body;
     await db.query("UPDATE convidados SET status = 1 WHERE idConvidado = ?", [idConvidado]);
     res.status(200).json({ mensagem: "Convidado confirmado com sucesso." });
+    // Recupera nome e telefone do convidado
     const [[convidadoInfo]] = await db.query(
-        "SELECT nome FROM convidados WHERE idConvidado = ?",
-        [idConvidado]
-      );
-      const nomeConvidado = convidadoInfo?.nome || 'Convidado Desconhecido';
-  
-      await transporter.sendMail({
-        from: `"João Pedro - Sistema" <${process.env.EMAIL_USER}>`,
-        to: "joaopedrovsilva102@gmail.com",
-        subject: `Status alterado: ${nomeConvidado} confirmado`,
-        html: `<p>O convidado <strong>${nomeConvidado}</strong> (ID: ${idConvidado}) foi <strong>confirmado</strong> manualmente.</p>`
-      });
+      "SELECT nome, telefone FROM convidados WHERE idConvidado = ?",
+      [idConvidado]
+    );
+    const nomeConvidado = convidadoInfo?.nome || 'Convidado Desconhecido';
+
+    await transporter.sendMail({
+      from: `"João Pedro - Sistema" <${process.env.EMAIL_USER}>`,
+      to: "joaopedrovsilva102@gmail.com",
+      subject: `Status alterado: ${nomeConvidado} confirmado`,
+      html: `<p>O convidado <strong>${nomeConvidado}</strong> (ID: ${idConvidado}) foi <strong>confirmado</strong> manualmente.</p>`
+    });
+
+    // Envia SMS ao convidado se enviaSMS === 1 e telefone válido
+    if (
+      enviaSMS === 1 &&
+      convidadoInfo?.telefone &&
+      convidadoInfo.telefone.replace(/\D/g, '').length >= 10
+    ) {
+      const phone = '+55' + convidadoInfo.telefone.replace(/\D/g, '');
+      const rawPrimeiroNome = nomeConvidado.split(' ')[0] || '';
+      const sanitizedNome = rawPrimeiroNome.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      const primeiroNome = sanitizedNome.length <= 15 ? sanitizedNome : '';
+      try {
+        await client.messages.create({
+          body: `Oi${primeiroNome ? ' ' + primeiroNome : ''}, presenca confirmada! Te espero dia 30/08 as 20h no Maria Horos Buffet.`,
+          from: '+16814323414',
+          to: phone
+        });
+        console.log("SMS enviado ao confirmar convidado.");
+      } catch (smsError) {
+        console.error(`Erro ao enviar SMS de confirmacao para ${phone}:`, smsError.message);
+      }
+    }
   } catch (error) {
     console.error("Erro ao confirmar convidado:", error);
     res.status(500).json({ erro: "Erro ao confirmar convidado." });
@@ -598,6 +662,28 @@ app.post('/api/marcarEntregue', async (req, res) => {
     }
 
     await db.query("UPDATE convidados SET entregue = 1 WHERE codigoConvite = ?", [codigoConvite]);
+
+    // Envia SMS para todos os convidados da família com telefone válido
+    const [convidados] = await db.query("SELECT nome, telefone FROM convidados WHERE codigoConvite = ?", [codigoConvite]);
+
+    for (const convidado of convidados) {
+      if (convidado.telefone && convidado.telefone.replace(/\D/g, '').length >= 10) {
+        const phone = '+55' + convidado.telefone.replace(/\D/g, '');
+        const rawPrimeiroNome = convidado.nome?.split(' ')[0] || '';
+        const sanitizedNome = rawPrimeiroNome.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        const primeiroNome = sanitizedNome.length <= 15 ? sanitizedNome : '';
+        try {
+          await client.messages.create({
+            body: `Oi${primeiroNome ? ' ' + primeiroNome : ''}, seu kit-convite chegou! Espero que goste do cafe. Confirme ate 30/07 em: https://joaovargas.dev.br/formatura Cod. Convite: ${codigoConvite}`,
+            from: '+16814323414',
+            to: phone
+          });
+        } catch (smsError) {
+          console.error(`Erro ao enviar SMS para ${phone}:`, smsError.message);
+        }
+      }
+    }
+
     res.status(200).json({ mensagem: "Família marcada como entregue com sucesso." });
   } catch (error) {
     console.error("Erro ao marcar como entregue:", error);

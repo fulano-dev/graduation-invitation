@@ -25,6 +25,8 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
   const [newGuest, setNewGuest] = useState({ nome: '', telefone: '', codigoConvite: '', crianca: false });
   const [showEntregueModal, setShowEntregueModal] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  // Estado para modal de confirmação SMS
+  const [confirmarSMS, setConfirmarSMS] = useState({ mostrar: false, idConvidado: null });
 
   useEffect(() => {
     // Recupera o código salvo no localStorage ao montar o componente
@@ -34,19 +36,28 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
     }
   }, []);
 
-  const atualizarStatus = async (idConvidado, novoStatus) => {
+  // Função para atualizar status de convidado (refatorada para SMS)
+  const atualizarStatus = async (idConvidado, novoStatus, enviarSMS = null) => {
     try {
-      const endpoint =
-        novoStatus === 1
-          ? "/api/confirmarConvidado"
-          : novoStatus === 2
-          ? "/api/recusarConvidado"
-          : "/api/pendenteConvidado";
+      let endpoint;
+      let body = { idConvidado };
+      if (novoStatus === 1 && enviarSMS !== null) {
+        endpoint = "/api/confirmarConvidado";
+        body.enviaSMS = enviarSMS;
+      } else if (novoStatus === 1) {
+        // Ao confirmar, perguntar sobre SMS se ainda não foi perguntado
+        setConfirmarSMS({ mostrar: true, idConvidado });
+        return;
+      } else if (novoStatus === 2) {
+        endpoint = "/api/recusarConvidado";
+      } else {
+        endpoint = "/api/pendenteConvidado";
+      }
 
       await fetch(`${API_URL}${endpoint}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ idConvidado }),
+        body: JSON.stringify(body),
       });
 
       setFamilias((prev) =>
@@ -789,6 +800,37 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
                 className="px-6 py-2 bg-[#F2B21C] text-black rounded-md hover:bg-[#bfa67e]"
               >
                 Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Modal de confirmação SMS */}
+      {confirmarSMS.mostrar && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-70 z-50">
+          <div className="bg-[#0d2931] text-[#F2B21C] p-6 rounded-lg shadow-lg max-w-sm w-full mx-4 text-center">
+            <h2 className="text-xl font-bold mb-4 font-['TexGyreTermes']">Enviar alerta SMS?</h2>
+            <p className="text-sm mb-6 font-['TexGyreTermes']">
+              Deseja enviar uma confirmação por SMS ao convidado?
+            </p>
+            <div className="flex justify-around gap-4">
+              <button
+                className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 font-['TexGyreTermes']"
+                onClick={async () => {
+                  await atualizarStatus(confirmarSMS.idConvidado, 1, 1);
+                  setConfirmarSMS({ mostrar: false, idConvidado: null });
+                }}
+              >
+                Sim
+              </button>
+              <button
+                className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 font-['TexGyreTermes']"
+                onClick={async () => {
+                  await atualizarStatus(confirmarSMS.idConvidado, 1, 0);
+                  setConfirmarSMS({ mostrar: false, idConvidado: null });
+                }}
+              >
+                Não
               </button>
             </div>
           </div>
