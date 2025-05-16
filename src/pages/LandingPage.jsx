@@ -34,6 +34,14 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
     if (savedCode && savedCode !== code) {
       setCode(savedCode);
     }
+
+    // Verifica se há código de convite na URL (?=1234 ou ?code=1234)
+    const params = new URLSearchParams(window.location.search);
+    const codeFromURL = params.get('') || params.get('code');
+    if (codeFromURL && codeFromURL.length === 4) {
+      setCode(codeFromURL);
+      localStorage.setItem('codigoConvite', codeFromURL);
+    }
   }, []);
 
   // Função para atualizar status de convidado (refatorada para SMS)

@@ -125,7 +125,7 @@ app.post('/api/confirmarPresenca', async (req, res) => {
         const phone = '+55' + convidado.telefone.replace(/\D/g, '');
         const rawPrimeiroNome = convidado.nome?.split(' ')[0] || '';
         const sanitizedNome = rawPrimeiroNome.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-        const primeiroNome = sanitizedNome.length <= 15 ? sanitizedNome : '';
+        const primeiroNome = sanitizedNome.length <= 10 ? sanitizedNome : '';
         try {
           await client.messages.create({
             body: `Oi${primeiroNome ? ' ' + primeiroNome : ''}, presenca confirmada! Te espero dia 30/08 as 20h no Maria Horos Buffet.`,
@@ -674,7 +674,7 @@ app.post('/api/marcarEntregue', async (req, res) => {
         const primeiroNome = sanitizedNome.length <= 15 ? sanitizedNome : '';
         try {
           await client.messages.create({
-            body: `Oi${primeiroNome ? ' ' + primeiroNome : ''}, seu kit-convite chegou! Espero que goste do cafe. Confirme ate 30/07 em: https://joaovargas.dev.br/formatura Cod. Convite: ${codigoConvite}`,
+            body: `Oi${primeiroNome ? ' ' + primeiroNome : ''}, seu kit-convite chegou! Confirme presença entre 15/06 e 30/07 em: https://joaovargas.dev.br/formatura/?=${codigoConvite}`,
             from: '+16814323414',
             to: phone
           });
