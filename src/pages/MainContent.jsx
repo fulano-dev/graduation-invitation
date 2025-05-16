@@ -33,7 +33,7 @@ export default function MainContent({ convidados }) {
                       <p className="text-sm mt-2 italic text-[#F2B21C]/80">Se quiser compartilhar, marque <strong>@joaovargas.jpg</strong> ao postar nos stories! 😉</p>
                      
                       <p className="text-sm mt-2">
-                        Volte aqui entre <strong>{inicioConfirmacao.toLocaleDateString('pt-BR')}</strong> e <strong>{fimConfirmacao.toLocaleDateString('pt-BR')}</strong> para confirmar sua presença.
+                        Volte aqui de <strong>{inicioConfirmacao.toLocaleDateString('pt-BR')}</strong> à <strong>{fimConfirmacao.toLocaleDateString('pt-BR')}</strong> para confirmar sua presença.
                       </p>
                       <div className="mt-4">
                         <CountdownTimer targetDate={inicioConfirmacao} message="Você poderá confirmar sua presença em:" />
