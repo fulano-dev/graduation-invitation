@@ -742,7 +742,7 @@ app.post('/api/marcarEntregue', async (req, res) => {
         const primeiroNome = sanitizedNome.length <= 15 ? sanitizedNome : '';
         try {
           await client.messages.create({
-            body: `Oi${primeiroNome ? ' ' + primeiroNome : ''}, seu kit-convite chegou! Confirme presença entre 15/06 e 30/07 em: https://joaovargas.dev.br/formatura/?=${codigoConvite}`,
+            body: `Oi${primeiroNome ? ' ' + primeiroNome : ''}, seu kit-convite chegou! Confirme presenca entre 15/06 e 30/07 em: https://joaovargas.dev.br/formatura/?=${codigoConvite}`,
             from: '+16814323414',
             to: phone
           });
