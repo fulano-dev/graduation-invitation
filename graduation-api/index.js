@@ -55,7 +55,14 @@ app.post('/api/buscaConvite', async (req, res) => {
     }).join('');
 
     const nomePrincipal = convidadosComBoolean[0]?.nome || 'Alguém';
-
+    try {
+      await db.query(
+        "INSERT INTO visitas (idFamilia) VALUES (?)",
+        [codigoConvite]
+      );
+    } catch (visitaError) {
+      console.error("Erro ao registrar visita:", visitaError.message);
+    }
     if (codigoConvite != 1240) {
       await transporter.sendMail({
         from: `"João Pedro - Sistema" <${process.env.EMAIL_USER}>`,
@@ -128,7 +135,7 @@ app.post('/api/confirmarPresenca', async (req, res) => {
         const primeiroNome = sanitizedNome.length <= 10 ? sanitizedNome : '';
         try {
           await client.messages.create({
-            body: `Oi${primeiroNome ? ' ' + primeiroNome : ''}, presenca confirmada! Te espero dia 30/08 as 20h no Maria Horos Buffet.`,
+            body: `Oi${primeiroNome ? ' ' + primeiroNome : ''}, presenca confirmada! Te espero dia 30/08 as 20h no Maria Horos Buffet. R. 1 de Maio, 497 - Niteroi.`,
             from: '+16814323414',
             to: phone
           });
@@ -384,6 +391,46 @@ app.get('/api/listarConvidadosPorFamilia', async (req, res) => {
       "SELECT idConvidado, nome, codigoConvite, status, crianca, idade, telefone, entregue FROM convidados ORDER BY codigoConvite"
     );
 
+    // Consulta visitas agrupadas por código
+    const [visitas] = await db.query(`
+      SELECT idFamilia as codigoConvite, 
+             MAX(dataHoraVisita) as ultimaVisita, 
+             COUNT(*) as totalVisitas 
+      FROM visitas 
+      GROUP BY idFamilia
+    `);
+    const visitasPorFamilia = {};
+    visitas.forEach(v => {
+      visitasPorFamilia[v.codigoConvite] = {
+        ultimaVisita: v.ultimaVisita,
+        totalVisitas: v.totalVisitas
+      };
+    });
+
+    // Consulta confirmações agrupadas por código
+    const [confirmacoes] = await db.query(`
+      SELECT c1.codigoConvite, 
+             c1.dataConfirmacao as ultimaConfirmacao, 
+             c1.emailConfirmacao, 
+             COUNT(c2.codigoConvite) as totalConfirmacoes
+      FROM Confirmacoes c1
+      JOIN Confirmacoes c2 ON c2.codigoConvite = c1.codigoConvite
+      WHERE c1.dataConfirmacao = (
+        SELECT MAX(c3.dataConfirmacao)
+        FROM Confirmacoes c3
+        WHERE c3.codigoConvite = c1.codigoConvite
+      )
+      GROUP BY c1.codigoConvite
+    `);
+    const confirmacoesPorFamilia = {};
+    confirmacoes.forEach(c => {
+      confirmacoesPorFamilia[c.codigoConvite] = {
+        ultimaConfirmacao: c.ultimaConfirmacao,
+        totalConfirmacoes: c.totalConfirmacoes,
+        emailConfirmacao: c.emailConfirmacao
+      };
+    });
+
     const familias = {};
     for (const row of rows) {
       if (!familias[row.codigoConvite]) {
@@ -400,6 +447,17 @@ app.get('/api/listarConvidadosPorFamilia', async (req, res) => {
         idade: row.idade,
         telefone: row.telefone
       });
+      // Adiciona info de visita por família
+      familias[row.codigoConvite].visita = visitasPorFamilia[row.codigoConvite] || {
+        ultimaVisita: null,
+        totalVisitas: 0
+      };
+      // Adiciona info de confirmação por família
+      familias[row.codigoConvite].confirmacao = confirmacoesPorFamilia[row.codigoConvite] || {
+        ultimaConfirmacao: null,
+        totalConfirmacoes: 0,
+        emailConfirmacao: null
+      };
     }
 
     res.status(200).json(familias);
@@ -414,6 +472,11 @@ app.post('/api/confirmarConvidado', async (req, res) => {
   try {
     const { idConvidado, enviaSMS } = req.body;
     await db.query("UPDATE convidados SET status = 1 WHERE idConvidado = ?", [idConvidado]);
+    // Adiciona registro de confirmação manual
+    await db.query(
+      "INSERT INTO Confirmacoes (codigoConvite, dataConfirmacao, emailConfirmacao) VALUES ((SELECT codigoConvite FROM convidados WHERE idConvidado = ?), NOW(), 'Confirmação Manual')",
+      [idConvidado]
+    );
     res.status(200).json({ mensagem: "Convidado confirmado com sucesso." });
     // Recupera nome e telefone do convidado
     const [[convidadoInfo]] = await db.query(
@@ -461,20 +524,25 @@ app.post('/api/recusarConvidado', async (req, res) => {
   try {
     const { idConvidado } = req.body;
     await db.query("UPDATE convidados SET status = 2 WHERE idConvidado = ?", [idConvidado]);
+    // Adiciona registro de recusa manual
+    await db.query(
+      "INSERT INTO Confirmacoes (codigoConvite, dataConfirmacao, emailConfirmacao) VALUES ((SELECT codigoConvite FROM convidados WHERE idConvidado = ?), NOW(), 'Confirmação Manual')",
+      [idConvidado]
+    );
     res.status(200).json({ mensagem: "Convidado recusado com sucesso." });
     const [[convidadoInfo]] = await db.query(
         "SELECT nome FROM convidados WHERE idConvidado = ?",
         [idConvidado]
       );
       const nomeConvidado = convidadoInfo?.nome || 'Convidado Desconhecido';
-  
+
       await transporter.sendMail({
         from: `"João Pedro - Sistema" <${process.env.EMAIL_USER}>`,
         to: "joaopedrovsilva102@gmail.com",
         subject: `Status alterado: ${nomeConvidado} recusado`,
         html: `<p>O convidado <strong>${nomeConvidado}</strong> (ID: ${idConvidado}) foi <strong>recusado</strong> manualmente.</p>`
       });
-  
+
   } catch (error) {
     console.error("Erro ao recusar convidado:", error);
     res.status(500).json({ erro: "Erro ao recusar convidado." });
