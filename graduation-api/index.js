@@ -660,61 +660,70 @@ app.post('/api/editarConvidado', async (req, res) => {
       res.status(500).json({ erro: 'Erro ao editar convidado.' });
     }
   });
-  app.get('/api/exportarListaPDF', async (req, res) => {
-    try {
-      const [convidados] = await db.query('SELECT * FROM convidados ORDER BY codigoConvite ASC');
-  
-      const familias = {};
-      convidados.forEach((c) => {
-        if (!familias[c.codigoConvite]) familias[c.codigoConvite] = [];
-        familias[c.codigoConvite].push(c);
+app.get('/api/exportarListaPDF', async (req, res) => {
+  try {
+    const [convidados] = await db.query(`
+      SELECT c.*, 
+             v.totalVisitas, 
+             v.ultimaVisita, 
+             cf.dataConfirmacao, 
+             cf.emailConfirmacao 
+      FROM convidados c
+      LEFT JOIN (
+        SELECT idFamilia, COUNT(*) as totalVisitas, MAX(dataHoraVisita) as ultimaVisita 
+        FROM visitas GROUP BY idFamilia
+      ) v ON v.idFamilia = c.codigoConvite
+      LEFT JOIN (
+        SELECT codigoConvite, MAX(dataConfirmacao) as dataConfirmacao, MAX(emailConfirmacao) as emailConfirmacao 
+        FROM Confirmacoes GROUP BY codigoConvite
+      ) cf ON cf.codigoConvite = c.codigoConvite
+      ORDER BY c.codigoConvite ASC
+    `);
+
+    const familias = {};
+    convidados.forEach((c) => {
+      if (!familias[c.codigoConvite]) familias[c.codigoConvite] = [];
+      familias[c.codigoConvite].push(c);
+    });
+
+    const doc = new PDFDocument();
+    const filename = 'acessos_e_confirmacoes.pdf';
+
+    res.setHeader('Content-Disposition', `attachment; filename=${filename}`);
+    res.setHeader('Content-Type', 'application/pdf');
+    doc.pipe(res);
+
+    doc.fontSize(20).text('Acessos e Confirmações por Família', { align: 'center' }).moveDown();
+
+    Object.entries(familias).forEach(([codigo, lista]) => {
+      const qualquer = lista[0];
+      doc.fontSize(16).text(`Família ${codigo} - ${qualquer.entregue ? 'Convite Entregue' : 'Aguarda Entrega'}`, { underline: true });
+      const infosLinha1 = [
+        `Total de Acessos: ${qualquer.totalVisitas || 0}`,
+        `Último Acesso: ${qualquer.ultimaVisita ? new Date(qualquer.ultimaVisita).toLocaleString('pt-BR') : '—'}`
+      ].join('    •    ');
+      const infosLinha2 = [
+        `Última Confirmação: ${qualquer.dataConfirmacao ? new Date(qualquer.dataConfirmacao).toLocaleString('pt-BR') : '—'}`,
+        `Email de Confirmação: ${qualquer.emailConfirmacao || '—'}`
+      ].join('    •    ');
+      doc.fontSize(8).text(infosLinha1);
+      doc.fontSize(8).text(infosLinha2);
+      doc.moveDown(0.5);
+
+      lista.forEach(c => {
+        const status = c.status === 1 ? 'Confirmado' : c.status === 2 ? 'Recusado' : 'Pendente';
+        const crianca = c.crianca ? ` - Criança (${c.idade || 'sem idade'})` : '';
+        doc.fontSize(11).text(`• ${c.nome}${crianca} - ${status}`);
       });
-  
-      const doc = new PDFDocument();
-      const filename = 'lista_convidados.pdf';
-  
-      res.setHeader('Content-Disposition', `attachment; filename=${filename}`);
-      res.setHeader('Content-Type', 'application/pdf');
-      doc.pipe(res);
-  
-      doc.fontSize(20).text('Lista de Convidados por Família', { align: 'center' }).moveDown();
-  
-      Object.entries(familias).forEach(([codigo, lista]) => {
-        doc.fontSize(16).text(`Família ${codigo}`, { underline: true });
-        lista.forEach(c => {
-          const status = c.status === 1 ? 'Confirmado' : c.status === 2 ? 'Recusado' : 'Pendente';
-          const crianca = c.crianca ? ` - Criança (${c.idade || 'sem idade'})` : '';
-          doc.fontSize(12).text(`• ${c.nome}${crianca} - ${status}`);
-        });
-        doc.moveDown();
-      });
-  
-      const totalConvidados = convidados.length;
-      const totalFamilias = Object.keys(familias).length;
-      const confirmados = convidados.filter(c => c.status === 1);
-      const recusados = convidados.filter(c => c.status === 2);
-      const pendentes = convidados.filter(c => c.status === 0);
-      const adultosConfirmados = confirmados.filter(c => !c.crianca || (c.idade && c.idade > 10));
-      const criancas05 = confirmados.filter(c => c.crianca && c.idade >= 0 && c.idade <= 5);
-      const criancas610 = confirmados.filter(c => c.crianca && c.idade >= 6 && c.idade <= 10);
-  
-      doc.addPage().fontSize(18).text('Consolidado', { underline: true }).moveDown();
-      doc.fontSize(12).list([
-        `Total de Convidados: ${totalConvidados}`,
-        `Total de Famílias: ${totalFamilias}`,
-        `Adultos Confirmados: ${adultosConfirmados.length}`,
-        `Crianças 0 a 5 anos Confirmadas: ${criancas05.length}`,
-        `Crianças 6 a 10 anos Confirmadas: ${criancas610.length}`,
-        `Pessoas Recusadas: ${recusados.length}`,
-        `Pessoas Pendentes: ${pendentes.length}`,
-      ]);
-  
-      doc.end();
-    } catch (err) {
-      console.error('Erro ao gerar PDF:', err);
-      res.status(500).json({ erro: 'Erro ao gerar PDF.' });
-    }
-  });
+      doc.moveDown();
+    });
+
+    doc.end();
+  } catch (err) {
+    console.error('Erro ao gerar PDF:', err);
+    res.status(500).json({ erro: 'Erro ao gerar PDF.' });
+  }
+});
 
 app.listen(port, () => {
   console.log(`🚀 Servidor rodando em http://localhost:${port}`);
@@ -775,3 +784,9 @@ app.post('/api/marcarNaoEntregue', async (req, res) => {
   }
 });
 
+process.on('uncaughtException', (err) => {
+  console.error('Erro não tratado:', err);
+});
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Rejeição não tratada:', reason);
+});

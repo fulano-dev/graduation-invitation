@@ -552,15 +552,37 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
                       Família {familia.codigoConvite}{' '}
                       {familia.entregue ? '📦' : '⏳'}
                     </h3>
-                    <button
-                      onClick={() => {
-                        setNewGuest(prev => ({ ...prev, codigoConvite: familia.codigoConvite }));
-                        setShowAddModal(true);
-                      }}
-                      className="bg-[#F2B21C] text-black px-3 py-1 rounded-full hover:bg-[#bfa67e] text-sm"
-                    >
-                      +
-                    </button>
+                    <div className="flex items-center">
+                      <button
+                        onClick={() => {
+                          setNewGuest(prev => ({ ...prev, codigoConvite: familia.codigoConvite }));
+                          setShowAddModal(true);
+                        }}
+                        className="bg-[#F2B21C] text-black px-3 py-1 rounded-full hover:bg-[#bfa67e] text-sm"
+                      >
+                        +
+                      </button>
+                      <button
+                        onClick={() => {
+                          const link = `https://joaovargas.dev.br/formatura/?=${familia.codigoConvite}`;
+                          navigator.clipboard.writeText(link)
+                            .then(() => {
+                              const toast = document.createElement('div');
+                              toast.textContent = `Link da família #${familia.codigoConvite} copiado!`;
+                              toast.className = 'fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-[#F2B21C] text-black px-6 py-3 rounded-full shadow-lg text-sm font-semibold z-50';
+                              document.body.appendChild(toast);
+                              setTimeout(() => {
+                                toast.remove();
+                              }, 3000);
+                            })
+                            .catch(() => alert('Erro ao copiar o link.'));
+                        }}
+                        title="Copiar link do convite"
+                        className="ml-2 px-3 py-1 rounded-full bg-[#F2B21C] text-black hover:bg-[#bfa67e] text-sm"
+                      >
+                        🔗
+                      </button>
+                    </div>
                   </div>
                   {familia.convidados.map((convidado) => (
                     <div key={convidado.idConvidado} className="flex justify-between items-center mb-2 p-2 bg-black/20 rounded-md">
