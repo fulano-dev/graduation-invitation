@@ -2,6 +2,8 @@ import EventCards from '@/components/EventsCard'
 import config from '@/config/config'
 import { motion } from 'framer-motion'
 import { GraduationCap } from 'lucide-react'
+import terno from '../photos/terno.svg';
+import vestido from '../photos/vestido.svg';
 
 export default function Events() {
     return (
@@ -52,6 +54,33 @@ export default function Events() {
                         >
                             Traje Passeio Completo
                         </motion.span>
+
+                        <motion.div
+                            initial={{ opacity: 0, y: 10 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ delay: 0.3 }}
+                            className="flex justify-center gap-6 mb-4"
+                        >
+                            <img src={terno} alt="Traje Masculino" className="w-14 h-14 md:w-16 md:h-16" />
+                            <img src={vestido} alt="Traje Feminino" className="w-14 h-14 md:w-16 md:h-16" />
+                        </motion.div>
+                        <motion.div
+                            initial={{ opacity: 0, y: 5 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ delay: 0.4 }}
+                            className="text-sm text-[#F2B21C] text-center mb-4"
+                        >
+                            <a
+                                href="https://www.google.com/search?q=traje+passeio+completo"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="underline hover:text-white transition-colors"
+                            >
+                                O que é traje passeio completo?
+                            </a>
+                        </motion.div>
 
                         {/* Linha decorativa */}
                         <motion.div
