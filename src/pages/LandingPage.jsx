@@ -483,6 +483,20 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
                     , 0)
                   }
                 </p>
+                <p className="font-['TexGyreTermes'] text-sm">
+                  <strong>Convidados Reservados:</strong> {
+                    familias.reduce((acc, f) =>
+                      acc + f.convidados.filter(c => c.status === 0 || c.status === 1).length
+                    , 0)
+                  }
+                </p>
+                <p className="font-['TexGyreTermes'] text-sm">
+                  <strong>Convidados Pendentes:</strong> {
+                    familias.reduce((acc, f) =>
+                      acc + f.convidados.filter(c => c.status === 0).length
+                    , 0)
+                  }
+                </p>
               </div>
               <button
                 onClick={() => setShowListModal(false)}

@@ -693,7 +693,7 @@ app.get('/api/exportarListaPDF', async (req, res) => {
     res.setHeader('Content-Type', 'application/pdf');
     doc.pipe(res);
 
-    doc.fontSize(20).text('Acessos e Confirmações por Família', { align: 'center' }).moveDown();
+    doc.fontSize(20).text('Convidados', { align: 'center' }).moveDown();
 
     Object.entries(familias).forEach(([codigo, lista]) => {
       const qualquer = lista[0];
