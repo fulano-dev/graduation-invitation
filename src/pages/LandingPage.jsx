@@ -28,6 +28,8 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
   // Estado para modal de confirmação SMS
   const [confirmarSMS, setConfirmarSMS] = useState({ mostrar: false, idConvidado: null });
 
+  const [showDashboardModal, setShowDashboardModal] = useState(false);
+
   useEffect(() => {
     // Recupera o código salvo no localStorage ao montar o componente
     const savedCode = localStorage.getItem('codigoConvite');
@@ -435,69 +437,8 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
         <div className="fixed inset-0 flex items-start justify-center bg-black bg-opacity-70 z-50 overflow-y-auto pt-10">
           <div className="bg-gradient-to-b from-[#0d2931] to-[#091d24] border border-[#F2B21C]/30 text-[#F2B21C] p-6 rounded-2xl shadow-2xl max-w-3xl w-full mx-4">
             <div className="flex justify-between items-center mb-4">
-              <div>
-                <p className="font-['TexGyreTermes'] text-sm">
-                  <strong>Total de Convidados:</strong> {familias.reduce((acc, f) => acc + f.convidados.length, 0)}
-                </p>
-                <p className="font-['TexGyreTermes'] text-sm">
-                  <strong>Total de Famílias:</strong> {familias.length}
-                </p>
-                <p className="font-['TexGyreTermes'] text-sm">
-                  <strong>Total de Crianças:</strong> {
-                    familias.reduce((acc, f) =>
-                      acc + f.convidados.filter(c => c.crianca).length
-                    , 0)
-                  }
-                </p>
-                <p className="font-['TexGyreTermes'] text-sm">
-                  <strong>Convites Entregues:</strong> {familias.filter(f => f.entregue).length}
-                </p>
-                <p className="font-['TexGyreTermes'] text-sm">
-                  <strong>Restantes para Entregar:</strong> {familias.filter(f => !f.entregue).length}
-                </p>
-                <p className="font-['TexGyreTermes'] text-sm">
-                  <strong>Adultos Confirmados:</strong> {
-                    familias.reduce((acc, f) =>
-                      acc + f.convidados.filter(c => c.status === 1 && (!c.crianca || (c.idade && c.idade > 10))).length
-                    , 0)
-                  }
-                </p>
-                <p className="font-['TexGyreTermes'] text-sm">
-                  <strong>Crianças 6 a 10 anos Confirmadas:</strong> {
-                    familias.reduce((acc, f) =>
-                      acc + f.convidados.filter(c => c.status === 1 && c.crianca && c.idade >= 6 && c.idade <= 10).length
-                    , 0)
-                  }
-                </p>
-                <p className="font-['TexGyreTermes'] text-sm">
-                  <strong>Crianças 0 a 5 anos Confirmadas:</strong> {
-                    familias.reduce((acc, f) =>
-                      acc + f.convidados.filter(c => c.status === 1 && c.crianca && c.idade >= 0 && c.idade <= 5).length
-                    , 0)
-                  }
-                </p>
-                <p className="font-['TexGyreTermes'] text-sm">
-                  <strong>Total de Recusados:</strong> {
-                    familias.reduce((acc, f) =>
-                      acc + f.convidados.filter(c => c.status === 2).length
-                    , 0)
-                  }
-                </p>
-                <p className="font-['TexGyreTermes'] text-sm">
-                  <strong>Convidados Reservados:</strong> {
-                    familias.reduce((acc, f) =>
-                      acc + f.convidados.filter(c => c.status === 0 || c.status === 1).length
-                    , 0)
-                  }
-                </p>
-                <p className="font-['TexGyreTermes'] text-sm">
-                  <strong>Convidados Pendentes:</strong> {
-                    familias.reduce((acc, f) =>
-                      acc + f.convidados.filter(c => c.status === 0).length
-                    , 0)
-                  }
-                </p>
-              </div>
+              {/* Botão Dashboard movido para o topo, logo após o cabeçalho */}
+              <h2 className="text-2xl font-bold font-['TexGyreTermes']">Painel Administrativo</h2>
               <button
                 onClick={() => setShowListModal(false)}
                 className="text-[#F2B21C] hover:text-[#bfa67e] font-bold text-lg"
@@ -505,6 +446,12 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
                 ✕
               </button>
             </div>
+            <button
+              onClick={() => setShowDashboardModal(true)}
+              className="mb-4 px-6 py-2 bg-[#F2B21C] text-black rounded-md hover:bg-[#bfa67e] font-['TexGyreTermes']"
+            >
+              📊 Dados Consolidados
+            </button>
             <h2 className="text-2xl font-bold mb-4 font-['TexGyreTermes'] text-center">Lista de Convidados</h2>
             <input
               type="text"
@@ -896,6 +843,245 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
               >
                 Não
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Dashboard Modal */}
+      {showDashboardModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-70 z-50 flex justify-center items-start overflow-y-auto pt-10 pb-10">
+          <div className="bg-[#0d2931] border border-[#F2B21C]/30 text-[#F2B21C] p-6 rounded-2xl shadow-2xl w-full max-w-4xl mx-4">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold font-['TexGyreTermes']">📊 Painel Consolidado</h2>
+              <button
+                onClick={() => setShowDashboardModal(false)}
+                className="text-[#F2B21C] hover:text-[#bfa67e] font-bold text-lg"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Limites da Festa - moved to first */}
+              <div className="bg-black/30 rounded-lg p-4 col-span-1 md:col-span-2">
+                <h3 className="font-bold text-lg mb-2">🎯 Limites da Festa</h3>
+                {(() => {
+                  const limiteAdultos = 84;
+                  const limiteCriancas = 12;
+                  const adultos = familias.reduce((acc, f) => acc + f.convidados.filter(c => (c.status === 0 || c.status === 1) && (!c.crianca || (c.idade && c.idade > 10))).length, 0);
+                  const criancas = familias.reduce((acc, f) => acc + f.convidados.filter(c => (c.status === 0 || c.status === 1) && c.crianca).length, 0);
+                  const adultosRestantes = Math.max(0, limiteAdultos - adultos);
+                  const criancasRestantes = Math.max(0, limiteCriancas - criancas);
+                  const grafico = (valor, limite) => {
+                    const percentual = Math.min(100, Math.round((valor / limite) * 100));
+                    return (
+                      <div className="mb-3">
+                        <p className="text-sm">Reservado: <strong>{valor}</strong> / {limite} ({percentual}%) — Vagas: <strong>{limite - valor}</strong></p>
+                        <div className="w-full h-3 bg-blue-200 rounded-full">
+                          <div className="h-full bg-blue-500 rounded-full" style={{ width: `${percentual}%` }}></div>
+                        </div>
+                      </div>
+                    );
+                  };
+                  return (
+                    <>
+                      <p className="font-semibold mb-1">Adultos</p>
+                      {grafico(adultos, limiteAdultos)}
+                      <p className="font-semibold mb-1">Crianças</p>
+                      {grafico(criancas, limiteCriancas)}
+                    </>
+                  );
+                })()}
+              </div>
+              {/* 1. Convidados Geral */}
+              <div className="bg-black/30 rounded-lg p-4">
+                <h3 className="font-bold text-lg mb-2">👥 Convidados - Geral</h3>
+                {(() => {
+                  const total = familias.reduce((acc, f) => acc + f.convidados.length, 0);
+                  const confirmados = familias.reduce((acc, f) => acc + f.convidados.filter(c => c.status === 1).length, 0);
+                  const pendentes = familias.reduce((acc, f) => acc + f.convidados.filter(c => c.status === 0).length, 0);
+                  const recusados = familias.reduce((acc, f) => acc + f.convidados.filter(c => c.status === 2).length, 0);
+                  const reservados = confirmados + pendentes;
+
+                  const dados = [
+                    { label: "Reservados", valor: reservados },
+                    { label: "Confirmados", valor: confirmados },
+                    { label: "Pendentes", valor: pendentes },
+                    { label: "Recusados", valor: recusados }
+                  ];
+
+                  // Cores: Reservados - amarelo, Confirmados - verde, Pendentes - laranja, Recusados - vermelho
+                  const barColors = [
+                    { bg: "bg-yellow-200", fg: "bg-yellow-500" }, // Reservados
+                    { bg: "bg-green-200", fg: "bg-green-500" },   // Confirmados
+                    { bg: "bg-orange-200", fg: "bg-orange-500" }, // Pendentes
+                    { bg: "bg-red-200", fg: "bg-red-500" },       // Recusados
+                  ];
+
+                  return dados.map((item, idx) => {
+                    const percentual = Math.round((item.valor / total) * 100);
+                    return (
+                      <div key={idx} className="mb-2">
+                        <p className="text-sm">{item.label}: <strong>{item.valor}</strong> ({percentual}%)</p>
+                        <div className={`w-full h-3 ${barColors[idx].bg} rounded-full`}>
+                          <div className={`h-full ${barColors[idx].fg} rounded-full`} style={{ width: `${percentual}%` }}></div>
+                        </div>
+                      </div>
+                    );
+                  });
+                })()}
+              </div>
+              {/* 2. Convites (Famílias) */}
+              <div className="bg-black/30 rounded-lg p-4">
+                <h3 className="font-bold text-lg mb-2">📨 Convites - Famílias</h3>
+                {(() => {
+                  const total = familias.length;
+                  const entregues = familias.filter(f => f.entregue).length;
+                  const faltando = total - entregues;
+                  // Indigo para esta seção
+                  const barColors = [
+                    { bg: "bg-indigo-200", fg: "bg-indigo-500" }, // Entregues
+                    { bg: "bg-indigo-200", fg: "bg-indigo-500" }, // Faltando (mesma cor para manter padrão)
+                  ];
+                  return ["Entregues", "Faltando"].map((tipo, idx) => {
+                    const valor = tipo === "Entregues" ? entregues : faltando;
+                    const percentual = total > 0 ? Math.round((valor / total) * 100) : 0;
+                    return (
+                      <div key={idx} className="mb-2">
+                        <p className="text-sm">{tipo}: <strong>{valor}</strong> ({percentual}%)</p>
+                        <div className={`w-full h-3 ${barColors[idx].bg} rounded-full`}>
+                          <div className={`h-full ${barColors[idx].fg} rounded-full`} style={{ width: `${percentual}%` }}></div>
+                        </div>
+                      </div>
+                    );
+                  });
+                })()}
+                {/* Gráfico "Acessaram o Convite" e "Não acessaram o convite" com base apenas nas entregues */}
+                {(() => {
+                  const entregues = familias.filter(f => f.entregue);
+                  const total = entregues.length;
+                  const acessaram = entregues.filter(f => f.visita && f.visita.totalVisitas > 0).length;
+                  const naoAcessaram = total - acessaram;
+
+                  const dados = [
+                    { label: "Acessaram o convite", valor: acessaram },
+                    { label: "Não acessaram o convite", valor: naoAcessaram }
+                  ];
+
+                  return dados.map((item, idx) => {
+                    const percentual = total > 0 ? Math.round((item.valor / total) * 100) : 0;
+                    return (
+                      <div key={idx} className="mb-2">
+                        <p className="text-sm">{item.label}: <strong>{item.valor}</strong> ({percentual}%)</p>
+                        <div className="w-full h-3 bg-indigo-200 rounded-full">
+                          <div className="h-full bg-indigo-500 rounded-full" style={{ width: `${percentual}%` }}></div>
+                        </div>
+                      </div>
+                    );
+                  });
+                })()}
+              </div>
+              {/* 3. Confirmados Detalhado */}
+              <div className="bg-black/30 rounded-lg p-4">
+                <h3 className="font-bold text-lg mb-2">✅ Confirmados por faixa</h3>
+                {(() => {
+                  const confirmados = familias.reduce((acc, f) => acc + f.convidados.filter(c => c.status === 1).length, 0);
+                  const adultos = familias.reduce((acc, f) => acc + f.convidados.filter(c => c.status === 1 && (!c.crianca || (c.idade && c.idade > 10))).length, 0);
+                  const criancas6a10 = familias.reduce((acc, f) => acc + f.convidados.filter(c => c.status === 1 && c.crianca && c.idade >= 6 && c.idade <= 10).length, 0);
+                  const criancas0a5 = familias.reduce((acc, f) => acc + f.convidados.filter(c => c.status === 1 && c.crianca && c.idade >= 0 && c.idade <= 5).length, 0);
+                  const data = [
+                    { label: "Adultos", valor: adultos },
+                    { label: "Crianças 6-10", valor: criancas6a10 },
+                    { label: "Crianças 0-5", valor: criancas0a5 }
+                  ];
+                  // Usar verde para confirmados
+                  return data.map((item, idx) => {
+                    const percentual = confirmados > 0 ? Math.round((item.valor / confirmados) * 100) : 0;
+                    return (
+                      <div key={idx} className="mb-2">
+                        <p className="text-sm">{item.label}: <strong>{item.valor}</strong> ({percentual}%)</p>
+                        <div className="w-full h-3 bg-green-200 rounded-full">
+                          <div className="h-full bg-green-500 rounded-full" style={{ width: `${percentual}%` }}></div>
+                        </div>
+                      </div>
+                    );
+                  });
+                })()}
+              </div>
+              {/* 4. Recusados Detalhado */}
+              <div className="bg-black/30 rounded-lg p-4">
+                <h3 className="font-bold text-lg mb-2">❌ Recusados por faixa</h3>
+                {(() => {
+                  const total = familias.reduce((acc, f) => acc + f.convidados.filter(c => c.status === 2).length, 0);
+                  const adultos = familias.reduce((acc, f) => acc + f.convidados.filter(c => c.status === 2 && (!c.crianca || (c.idade && c.idade > 10))).length, 0);
+                  const criancas = familias.reduce((acc, f) => acc + f.convidados.filter(c => c.status === 2 && c.crianca).length, 0);
+                  const data = [
+                    { label: "Adultos", valor: adultos },
+                    { label: "Crianças", valor: criancas }
+                  ];
+                  // Usar vermelho para recusados
+                  return data.map((item, idx) => {
+                    const percentual = total > 0 ? Math.round((item.valor / total) * 100) : 0;
+                    return (
+                      <div key={idx} className="mb-2">
+                        <p className="text-sm">{item.label}: <strong>{item.valor}</strong> ({percentual}%)</p>
+                        <div className="w-full h-3 bg-red-200 rounded-full">
+                          <div className="h-full bg-red-500 rounded-full" style={{ width: `${percentual}%` }}></div>
+                        </div>
+                      </div>
+                    );
+                  });
+                })()}
+              </div>
+              {/* 5. Reservados Detalhado */}
+              <div className="bg-black/30 rounded-lg p-4">
+                <h3 className="font-bold text-lg mb-2">📋 Reservados por faixa</h3>
+                {(() => {
+                  const total = familias.reduce((acc, f) => acc + f.convidados.filter(c => c.status === 0 || c.status === 1).length, 0);
+                  const adultos = familias.reduce((acc, f) => acc + f.convidados.filter(c => (c.status === 0 || c.status === 1) && (!c.crianca || (c.idade && c.idade > 10))).length, 0);
+                  const criancas = familias.reduce((acc, f) => acc + f.convidados.filter(c => (c.status === 0 || c.status === 1) && c.crianca).length, 0);
+                  const data = [
+                    { label: "Adultos", valor: adultos },
+                    { label: "Crianças", valor: criancas }
+                  ];
+                  // Usar amarelo para reservados
+                  return data.map((item, idx) => {
+                    const percentual = total > 0 ? Math.round((item.valor / total) * 100) : 0;
+                    return (
+                      <div key={idx} className="mb-2">
+                        <p className="text-sm">{item.label}: <strong>{item.valor}</strong> ({percentual}%)</p>
+                        <div className="w-full h-3 bg-yellow-200 rounded-full">
+                          <div className="h-full bg-yellow-500 rounded-full" style={{ width: `${percentual}%` }}></div>
+                        </div>
+                      </div>
+                    );
+                  });
+                })()}
+              </div>
+              {/* 6. Pendentes por Faixa */}
+              <div className="bg-black/30 rounded-lg p-4">
+                <h3 className="font-bold text-lg mb-2">🕗 Pendentes por Faixa</h3>
+                {(() => {
+                  const pendentes = familias.reduce((acc, f) => acc + f.convidados.filter(c => c.status === 0).length, 0);
+                  const adultos = familias.reduce((acc, f) => acc + f.convidados.filter(c => c.status === 0 && (!c.crianca || (c.idade && c.idade > 10))).length, 0);
+                  const criancas = pendentes - adultos;
+                  const data = [
+                    { label: "Adultos", valor: adultos },
+                    { label: "Crianças", valor: criancas }
+                  ];
+                  // Usar laranja para pendentes
+                  return data.map((item, idx) => {
+                    const percentual = pendentes > 0 ? Math.round((item.valor / pendentes) * 100) : 0;
+                    return (
+                      <div key={idx} className="mb-2">
+                        <p className="text-sm">{item.label}: <strong>{item.valor}</strong> ({percentual}%)</p>
+                        <div className="w-full h-3 bg-orange-200 rounded-full">
+                          <div className="h-full bg-orange-500 rounded-full" style={{ width: `${percentual}%` }}></div>
+                        </div>
+                      </div>
+                    );
+                  });
+                })()}
+              </div>
             </div>
           </div>
         </div>
