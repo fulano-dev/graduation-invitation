@@ -116,7 +116,7 @@ app.post('/api/enviarLembretePendentes', async (req, res) => {
     const [pendentes] = await db.query(`
       SELECT nome, telefone, codigoConvite 
       FROM convidados 
-      WHERE status = 5
+      WHERE status = 0
     `);
 
     const enviados = [];
