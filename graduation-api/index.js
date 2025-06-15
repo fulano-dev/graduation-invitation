@@ -4,10 +4,94 @@ import { db } from './db.js';
 import nodemailer from 'nodemailer';
 import multer from 'multer';
 import fs from 'fs';
+import fetch from 'node-fetch';
 import twilio from 'twilio';
+import https from 'https';
 const accountSid = process.env.TWILIO_SID;
 const authToken = process.env.TWILIO_TOKEN;
 const client = twilio(accountSid, authToken);
+
+const smsProvedor = process.env.SMS_PROVEDOR;
+const mexToken = process.env.MEX_TOKEN;
+const debugSMS = process.env.DEBUG_SMS === 'true';
+
+async function enviarSMS(telefone, mensagem) {
+  const phone = '+55' + telefone.replace(/\D/g, '');
+
+  if (debugSMS) {
+    console.log(`DEBUG ATIVO - SMS NÃO ENVIADO para ${phone}: ${mensagem}`);
+    return;
+  }
+
+  if (smsProvedor === 'twilio') {
+    try {
+      await client.messages.create({
+        body: mensagem,
+        from: '+16814323414',
+        to: phone
+      });
+      console.log(`SMS ENVIADO VIA TWILIO para ${phone}`);
+    } catch (error) {
+      console.error(`Erro ao enviar SMS via Twilio para ${phone}:`, error.message);
+    }
+  } else if (smsProvedor === 'mex') {
+    const url = `https://mex10.com/api/shortcodev2.aspx?token=${mexToken}&t=send&n=${phone}&m=${encodeURIComponent(mensagem)}`;
+    try {
+      const response = await fetch(url);
+      const result = await response.text();
+      console.log(`SMS ENVIADO VIA MEX10 para ${phone}: ${result}`);
+    } catch (error) {
+      console.error(`Erro ao enviar SMS via Mex10 para ${phone}:`, error.message);
+    }
+  } else if (smsProvedor === 'infobip') {
+    const urlInfobip = process.env.URL_INFOBIP;
+    const tokenInfobip = process.env.INFOBIP_TOKEN;
+
+    const postData = JSON.stringify({
+      "messages": [
+        {
+          "destinations": [{ "to": phone }],
+          "from": "Formatura",
+          "text": mensagem
+        }
+      ]
+    });
+
+    const options = {
+      method: 'POST',
+      hostname: 'api.infobip.com',
+      path: '/sms/2/text/advanced',
+      headers: {
+        'Authorization': `App ${tokenInfobip}`,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      maxRedirects: 20
+    };
+
+    const req = https.request(options, function (res) {
+      const chunks = [];
+
+      res.on("data", function (chunk) {
+        chunks.push(chunk);
+      });
+
+      res.on("end", function () {
+        const body = Buffer.concat(chunks);
+        console.log(`SMS ENVIADO VIA INFOBIP para ${phone}: ${body.toString()}`);
+      });
+
+      res.on("error", function (error) {
+        console.error(`Erro ao enviar SMS via Infobip para ${phone}:`, error.message);
+      });
+    });
+
+    req.write(postData);
+    req.end();
+  } else {
+    console.log("⚠️ Nenhum provedor de SMS configurado corretamente.");
+  }
+}
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
@@ -93,8 +177,8 @@ app.post('/api/confirmarPresenca', async (req, res) => {
     if (!codigoConvite || !emailConfirmacao || !Array.isArray(convidados)) {
       return res.status(400).json({ erro: "Dados incompletos para confirmação." });
     }
-     // Busca os convidados antigos antes da atualização para comparar status
-     const [convidadosAntigos] = await db.query(
+    // Busca os convidados antigos antes da atualização para comparar status
+    const [convidadosAntigos] = await db.query(
       "SELECT idConvidado, telefone, nome, status FROM convidados WHERE codigoConvite = ?",
       [codigoConvite]
     );
@@ -108,8 +192,6 @@ app.post('/api/confirmarPresenca', async (req, res) => {
     });
 
     await Promise.all(updatePromises);
-
-   
 
     await db.query(
       "INSERT INTO Confirmacoes (codigoConvite, dataConfirmacao, emailConfirmacao) VALUES (?, NOW(), ?)",
@@ -129,23 +211,14 @@ app.post('/api/confirmarPresenca', async (req, res) => {
     // Envia SMS apenas para quem mudou de pendente para confirmado e tem telefone válido
     for (const convidado of convidadosConvertidos) {
       if (convidado.mudouParaConfirmado && convidado.telefone && convidado.telefone.replace(/\D/g, '').length >= 10) {
-        const phone = '+55' + convidado.telefone.replace(/\D/g, '');
         const rawPrimeiroNome = convidado.nome?.split(' ')[0] || '';
         const sanitizedNome = rawPrimeiroNome.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
         const primeiroNome = sanitizedNome.length <= 10 ? sanitizedNome : '';
-        try {
-          await client.messages.create({
-            body: `Oi${primeiroNome ? ' ' + primeiroNome : ''}, presenca confirmada! Te espero dia 30/08 as 20h no Maria Horos Buffet. R. 1 de Maio, 497 - Niteroi.`,
-            from: '+16814323414',
-            to: phone
-          });
-          console.log("SMS ENVIADO");
-        } catch (smsError) {
-          console.error(`Erro ao enviar SMS de confirmacao para ${phone}:`, smsError.message);
-        }
+        const mensagem = `Oi${primeiroNome ? ' ' + primeiroNome : ''}, presenca confirmada! Te espero dia 30/08 as 20h no Maria Horos Buffet. R. 1 de Maio, 497 - Niteroi.`;
+        await enviarSMS(convidado.telefone, mensagem);
       }
     }
-console.log(convidados)
+    console.log(convidados)
     const nomesConfirmados = convidados.map((c) => {
       const statusTexto = c.status === 1 ? 'Confirmado' : c.status === 2 ? 'Não comparecerá' : 'Pendente';
       let tipoTexto = 'Adulto';
@@ -275,7 +348,17 @@ console.log(convidados)
             <p><strong>📅 Data:</strong> 30/08/2025</p>
             <p><strong>⏰ Horário:</strong> 20h</p>
             <p><strong>📍 Local:</strong> Maria Horos Buffet, Rua Primeiro de Maio, 497 – Niterói, Canoas/RS</p>
-            <p><strong>👔 Traje:</strong> Passeio completo</p>
+            <p style="font-size:18px;margin-bottom:10px;text-align:center;">
+              <strong>👔 Traje:</strong> 
+              <span style="font-size:22px;">Passeio Completo</span> 
+              <a href="https://www.google.com/search?q=o+que+%C3%A9+traje+passeio+completo%3F" 
+                 target="_blank" 
+                 style="color:#F2B21C;text-decoration:underline;">(O que é?)</a>
+            </p>
+            <div style="text-align:center;margin-bottom:20px;">
+              <img src="https://i.imgur.com/ewaWhfk.png" alt="Traje Masculino" title="Traje Masculino" style="width:50px;height:auto;margin:0 10px;" />
+              <img src="https://i.imgur.com/YnqAHyp.png" alt="Traje Feminino" title="Traje Feminino" style="width:50px;height:auto;margin:0 10px;" />
+            </div>
             <p style="margin-top:20px;">Convidado(s) confirmado(s):</p>
             <ul style="text-align:left;display:inline-block;margin:auto;">${nomesConfirmados}</ul>
             ${mensagemExtra}
@@ -498,20 +581,11 @@ app.post('/api/confirmarConvidado', async (req, res) => {
       convidadoInfo?.telefone &&
       convidadoInfo.telefone.replace(/\D/g, '').length >= 10
     ) {
-      const phone = '+55' + convidadoInfo.telefone.replace(/\D/g, '');
       const rawPrimeiroNome = nomeConvidado.split(' ')[0] || '';
       const sanitizedNome = rawPrimeiroNome.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
       const primeiroNome = sanitizedNome.length <= 15 ? sanitizedNome : '';
-      try {
-        await client.messages.create({
-          body: `Oi${primeiroNome ? ' ' + primeiroNome : ''}, presenca confirmada! Te espero dia 30/08 as 20h no Maria Horos Buffet.`,
-          from: '+16814323414',
-          to: phone
-        });
-        console.log("SMS enviado ao confirmar convidado.");
-      } catch (smsError) {
-        console.error(`Erro ao enviar SMS de confirmacao para ${phone}:`, smsError.message);
-      }
+      const mensagem = `Oi${primeiroNome ? ' ' + primeiroNome : ''}, presenca confirmada! Te espero dia 30/08 as 20h no Maria Horos Buffet.`;
+      await enviarSMS(convidadoInfo.telefone, mensagem);
     }
   } catch (error) {
     console.error("Erro ao confirmar convidado:", error);
@@ -745,19 +819,11 @@ app.post('/api/marcarEntregue', async (req, res) => {
 
     for (const convidado of convidados) {
       if (convidado.telefone && convidado.telefone.replace(/\D/g, '').length >= 10) {
-        const phone = '+55' + convidado.telefone.replace(/\D/g, '');
         const rawPrimeiroNome = convidado.nome?.split(' ')[0] || '';
         const sanitizedNome = rawPrimeiroNome.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
         const primeiroNome = sanitizedNome.length <= 15 ? sanitizedNome : '';
-        try {
-          await client.messages.create({
-            body: `Oi${primeiroNome ? ' ' + primeiroNome : ''}, seu kit-convite chegou! Confirme presenca entre 15/06 e 30/07 em: https://joaovargas.dev.br/formatura/?=${codigoConvite}`,
-            from: '+16814323414',
-            to: phone
-          });
-        } catch (smsError) {
-          console.error(`Erro ao enviar SMS para ${phone}:`, smsError.message);
-        }
+        const mensagem = `Oi${primeiroNome ? ' ' + primeiroNome : ''}, seu kit-convite chegou! Confirme presenca entre 15/06 e 30/07 em: https://joaovargas.dev.br/formatura/?=${codigoConvite}`;
+        await enviarSMS(convidado.telefone, mensagem);
       }
     }
 
