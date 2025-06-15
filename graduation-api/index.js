@@ -111,6 +111,43 @@ app.use(express.json());
 
 const upload = multer({ dest: 'uploads/' });
 
+app.post('/api/enviarLembretePendentes', async (req, res) => {
+  try {
+    const [pendentes] = await db.query(`
+      SELECT nome, telefone, codigoConvite 
+      FROM convidados 
+      WHERE status = 5
+    `);
+
+    const enviados = [];
+    const ignorados = [];
+
+    for (const convidado of pendentes) {
+      if (convidado.telefone && convidado.telefone.replace(/\D/g, '').length >= 10) {
+        const primeiroNome = (convidado.nome?.split(' ')[0] || '')
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "")
+          .substring(0, 15);
+        
+          const mensagem = `Ola ${primeiroNome}, liberada a confirmacao de presenca! Confirme ate 30/07 em https://joaovargas.dev.br/formatura/?=${convidado.codigoConvite}`;
+
+        await enviarSMS(convidado.telefone, mensagem);
+        enviados.push({ nome: convidado.nome, telefone: convidado.telefone });
+      } else {
+        ignorados.push({ nome: convidado.nome, telefone: convidado.telefone });
+      }
+    }
+
+    return res.status(200).json({
+      mensagem: "Lembretes enviados com sucesso.",
+      enviados,
+      ignorados
+    });
+  } catch (error) {
+    console.error("Erro ao enviar lembretes:", error);
+    res.status(500).json({ erro: "Erro ao enviar lembretes." });
+  }
+});
 app.post('/api/buscaConvite', async (req, res) => {
   try {
     const { codigoConvite } = req.body;
