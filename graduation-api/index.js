@@ -439,6 +439,30 @@ app.post('/api/confirmarPresenca', async (req, res) => {
     await transporter.sendMail(mailOptionsConvidado);
     await transporter.sendMail(mailOptionsAdmin);
 
+    // Se ao menos 1 confirmado, cadastra e-mail no Brevo
+    if (confirmadosList.length > 0 && emailConfirmacao) {
+      const brevoOptions = {
+        method: 'POST',
+        headers: {
+          accept: 'application/json',
+          'content-type': 'application/json',
+          'api-key': process.env.BREVO_TOKEN
+        },
+        body: JSON.stringify({
+          updateEnabled: false,
+          listIds: [2],
+          email: emailConfirmacao
+        })
+      };
+      try {
+        const brevoRes = await fetch('https://api.brevo.com/v3/contacts', brevoOptions);
+        const brevoJson = await brevoRes.json();
+        console.log("BREVO API RESULT:", brevoJson);
+      } catch (brevoError) {
+        console.error("Erro ao cadastrar e-mail no Brevo:", brevoError.message);
+      }
+    }
+
     return res.status(200).json({ mensagem: "Confirmação registrada com sucesso." });
   } catch (error) {
     console.error("Erro ao confirmar presença:", error);
