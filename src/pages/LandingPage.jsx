@@ -452,6 +452,30 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
             >
               📊 Dados Consolidados
             </button>
+            <button
+              onClick={() => {
+                const confirmar = window.confirm("Tem certeza que deseja enviar SMS de lembrete para os convidados pendentes?");
+                if (!confirmar) return;
+
+                fetch(`${API_URL}/api/enviarLembretePendentes`, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                })
+                  .then((res) => {
+                    if (res.ok) {
+                      alert("✅ SMS de lembrete enviado com sucesso para todos os pendentes.");
+                    } else {
+                      alert("❌ Erro ao enviar os SMS. Verifique o servidor.");
+                    }
+                  })
+                  .catch(() => {
+                    alert("❌ Erro na requisição. Verifique sua conexão.");
+                  });
+              }}
+              className="mb-4 px-6 py-2 bg-[#F2B21C] text-black rounded-md hover:bg-[#bfa67e] font-['TexGyreTermes']"
+            >
+              📲 Enviar SMS Lembrete Pendentes
+            </button>
             <h2 className="text-2xl font-bold mb-4 font-['TexGyreTermes'] text-center">Lista de Convidados</h2>
             <input
               type="text"
