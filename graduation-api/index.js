@@ -129,7 +129,7 @@ app.post('/api/enviarLembretePendentes', async (req, res) => {
           .replace(/[\u0300-\u036f]/g, "")
           .substring(0, 15);
         
-          const mensagem = `Ola ${primeiroNome}, liberada a confirmacao de presenca! Confirme ate 30/07 em https://joaovargas.dev.br/formatura/?=${convidado.codigoConvite}`;
+          const mensagem = `Ola ${primeiroNome}, ja sabe se vai ir na formatura do Joao? Confirme ate 30/07 em https://joaovargas.dev.br/formatura/?=${convidado.codigoConvite}`;
 
         await enviarSMS(convidado.telefone, mensagem);
         enviados.push({ nome: convidado.nome, telefone: convidado.telefone });
