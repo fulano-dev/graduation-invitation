@@ -19,6 +19,22 @@ const Wishes = ({ convidados = [] }) => {
   const inicioConfirmacao = new Date("2025-06-15T00:00:00");
   const fimConfirmacao = new Date("2025-07-30T23:59:59");
   const dentroDoPrazo = hoje >= inicioConfirmacao && hoje <= fimConfirmacao;
+
+  // Bloqueio por recusa há mais de 3 dias (por convidado)
+  const bloqueiosPorRecusa = useMemo(() => {
+    const resultado = {};
+    convidadosMock.forEach(c => {
+      if (c.status !== 2 || !c.dataRecusa) {
+        resultado[c.idConvidado] = false;
+        return;
+      }
+      const dataRecusa = new Date(c.dataRecusa);
+      const tresDiasDepois = new Date(dataRecusa);
+      tresDiasDepois.setDate(tresDiasDepois.getDate() + 3);
+      resultado[c.idConvidado] = hoje > tresDiasDepois;
+    });
+    return resultado;
+  }, [convidadosMock]);
   
   const CountdownTimer = ({ targetDate }) => {
     const [timeLeft, setTimeLeft] = useState(calculateTimeLeft());
@@ -158,81 +174,92 @@ const Wishes = ({ convidados = [] }) => {
               setConfirmados(dados);
               setShowModal(true);
             }}>
-              {convidadosMock.map((convidado, index) => (
-                <div key={convidado.idConvidado} className="border border-[#F2B21C]/30 p-4 rounded-lg space-y-2 bg-white/5">
-                  <p className="text-[#F2B21C] font-semibold font-['TexGyreTermes']">{convidado.nome}</p>
-                  <div className="flex items-center gap-2">
-                    {convidado.status === 1 ? (
-                      <>
-                        <CheckCircle className="w-5 h-5 text-green-500" />
-                        <span className="text-green-500 font-bold">Confirmado</span>
-                      </>
-                    ) : convidado.status === 2 ? (
-                      <>
-                        <XCircle className="w-5 h-5 text-red-500" />
-                        <span className="text-red-500 font-bold">Não comparecerá</span>
-                      </>
-                    ) : (
-                      <>
-                        <AlertCircle className="w-5 h-5 text-yellow-500" />
-                        <span className="text-yellow-500 font-bold">Pendente</span>
-                      </>
-                    )}
-                  </div>
-                  
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-[#F2B21C] font-['TexGyreTermes']">Confirmar presença</span>
-                    <label className="relative inline-flex items-center cursor-pointer">
-                    <input
-                        type="checkbox"
-                        name={`confirmado-${index}`}
-                        checked={statusTemp[index] === 1}
-                        onChange={(e) => {
-                          const newStatus = e.target.checked ? 1 : 2;
-                          setStatusTemp(prev => {
-                            const updated = [...prev];
-                            updated[index] = newStatus;
-                            return updated;
-                          });
-                        }}
-                        className="sr-only peer"
-                      />
-                      <div className="w-11 h-6 bg-white/20 border border-[#F2B21C]/40 peer-focus:outline-none rounded-full peer peer-checked:bg-[#F2B21C] peer-checked:border-[#F2B21C] transition-all duration-300"></div>
-                      <div className="absolute left-0.5 top-0.5 bg-white w-5 h-5 rounded-full transition-all duration-300 peer-checked:translate-x-full"></div>
-                    </label>
-                  </div>
-
-                  {convidado.crianca === true && (
+            {convidadosMock.map((convidado, index) => (
+              <div key={convidado.idConvidado} className="border border-[#F2B21C]/30 p-4 rounded-lg space-y-2 bg-white/5">
+                <p className="text-[#F2B21C] font-semibold font-['TexGyreTermes']">{convidado.nome}</p>
+                <div className="flex items-center gap-2">
+                  {convidado.status === 1 ? (
                     <>
-                      <p className="text-sm italic text-[#F2B21C] font-['TexGyreTermes'] mt-2">O anfitrião marcou que este convidado é uma criança.</p>
-                      <div className="flex justify-between items-start mt-2">
-                        <label className="text-sm text-[#F2B21C] font-['TexGyreTermes'] mt-1">Idade da criança em 30/08/2025:</label>
-                        <input
-                          type="number"
-                          name={`idade-${index}`}
-                          defaultValue={convidado.status !== 0 && convidado.idade ? convidado.idade : ""}
-                          required
-                          className="w-20 px-3 py-1.5 rounded-xl bg-white/10 border border-[#F2B21C]/50 text-[#F2B21C] placeholder-[#F2B21C]/60 font-['TexGyreTermes']"
-                        />
-                      </div>
+                      <CheckCircle className="w-5 h-5 text-green-500" />
+                      <span className="text-green-500 font-bold">Confirmado</span>
+                    </>
+                  ) : convidado.status === 2 ? (
+                    <>
+                      <XCircle className="w-5 h-5 text-red-500" />
+                      <span className="text-red-500 font-bold">Não comparecerá</span>
+                    </>
+                  ) : (
+                    <>
+                      <AlertCircle className="w-5 h-5 text-yellow-500" />
+                      <span className="text-yellow-500 font-bold">Pendente</span>
                     </>
                   )}
-
-                  <div className="space-y-2 pt-2">
-                    {statusTemp[index] !== convidadosMock[index].status && (
-                      statusTemp[index] === 1 ? (
-                        <p className="text-green-500 text-sm font-['TexGyreTermes']">
-                          Você está confirmando presença. Clique em {convidadosMock.some(c => c.status === 1 || c.status === 2) ? "editar" : "enviar"} para salvar.
-                        </p>
-                      ) : (
-                        <p className="text-red-500 text-sm font-['TexGyreTermes']">
-                          Você está informando que não comparecerá. Clique em {convidadosMock.some(c => c.status === 1 || c.status === 2) ? "editar" : "enviar"} para salvar.
-                        </p>
-                      )
-                    )}
-                  </div>
                 </div>
-              ))}
+                {/* Data-limite para alterar recusa */}
+                {!bloqueiosPorRecusa[convidado.idConvidado] && convidado.status === 2 && convidado.dataRecusa && (
+                  <p className="text-yellow-300 text-sm italic">
+                    Você recusou o convite. Por questões de organização, você tem apenas 3 dias (até {new Date(new Date(convidado.dataRecusa).setDate(new Date(convidado.dataRecusa).getDate() + 3)).toLocaleDateString('pt-BR')}) para reverter sua resposta.
+                  </p>
+                )}
+                {bloqueiosPorRecusa[convidado.idConvidado] ? (
+                  <p className="text-red-400 text-sm italic">Este convidado recusou há mais de 3 dias. Alterações estão bloqueadas.</p>
+                ) : (
+                  <>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-[#F2B21C] font-['TexGyreTermes']">Confirmar presença</span>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          name={`confirmado-${index}`}
+                          checked={statusTemp[index] === 1}
+                          onChange={(e) => {
+                            const newStatus = e.target.checked ? 1 : 2;
+                            setStatusTemp(prev => {
+                              const updated = [...prev];
+                              updated[index] = newStatus;
+                              return updated;
+                            });
+                          }}
+                          className="sr-only peer"
+                        />
+                        <div className="w-11 h-6 bg-white/20 border border-[#F2B21C]/40 peer-focus:outline-none rounded-full peer peer-checked:bg-[#F2B21C] peer-checked:border-[#F2B21C] transition-all duration-300"></div>
+                        <div className="absolute left-0.5 top-0.5 bg-white w-5 h-5 rounded-full transition-all duration-300 peer-checked:translate-x-full"></div>
+                      </label>
+                    </div>
+
+                    {convidado.crianca === true && (
+                      <>
+                        <p className="text-sm italic text-[#F2B21C] font-['TexGyreTermes'] mt-2">O anfitrião marcou que este convidado é uma criança.</p>
+                        <div className="flex justify-between items-start mt-2">
+                          <label className="text-sm text-[#F2B21C] font-['TexGyreTermes'] mt-1">Idade da criança em 30/08/2025:</label>
+                          <input
+                            type="number"
+                            name={`idade-${index}`}
+                            defaultValue={convidado.status !== 0 && convidado.idade ? convidado.idade : ""}
+                            required
+                            className="w-20 px-3 py-1.5 rounded-xl bg-white/10 border border-[#F2B21C]/50 text-[#F2B21C] placeholder-[#F2B21C]/60 font-['TexGyreTermes']"
+                          />
+                        </div>
+                      </>
+                    )}
+
+                    <div className="space-y-2 pt-2">
+                      {statusTemp[index] !== convidadosMock[index].status && (
+                        statusTemp[index] === 1 ? (
+                          <p className="text-green-500 text-sm font-['TexGyreTermes']">
+                            Você está confirmando presença. Clique em {convidadosMock.some(c => c.status === 1 || c.status === 2) ? "editar" : "enviar"} para salvar.
+                          </p>
+                        ) : (
+                          <p className="text-red-500 text-sm font-['TexGyreTermes']">
+                            Você está informando que não comparecerá. Clique em {convidadosMock.some(c => c.status === 1 || c.status === 2) ? "editar" : "enviar"} para salvar.
+                          </p>
+                        )
+                      )}
+                    </div>
+                  </>
+                )}
+              </div>
+            ))}
 
               <div className="space-y-4 pt-6 border-t border-[#F2B21C]/30">
                 <div>
@@ -337,6 +364,16 @@ const Wishes = ({ convidados = [] }) => {
               </div>
             )}
           </>
+        ) : convidadosMock.some(c => bloqueiosPorRecusa[c.idConvidado]) ? (
+          <div className="bg-[#0f3e57] text-[#F2B21C] font-['TexGyreTermes'] text-center p-6 rounded-xl shadow-lg">
+            <h2 className="text-2xl font-semibold mb-2">Confirmação de Presença</h2>
+            <p className="text-sm mb-4">
+              Você informou que não poderá comparecer, e o prazo de 3 dias para reverter a decisão já passou.
+            </p>
+            <p className="text-sm text-[#F2B21C] mt-4">
+              Em caso de mudança de planos, entre em contato diretamente com o João.
+            </p>
+          </div>
         ) : (
           <div className="bg-[#0f3e57] text-[#F2B21C] font-['TexGyreTermes'] text-center p-6 rounded-xl shadow-lg">
             <h2 className="text-2xl font-semibold mb-2">Confirmação de Presença</h2>

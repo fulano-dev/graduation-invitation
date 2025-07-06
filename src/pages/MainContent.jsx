@@ -55,25 +55,47 @@ export default function MainContent({ convidados }) {
                     </>
                   )}
 
-                  {hoje >= inicioConfirmacao && hoje <= fimConfirmacao && confirmados && (
-                    <>
-                      <CheckCircle className="mx-auto w-10 h-10 text-green-500" />
-                      <h3 className="text-xl font-semibold text-green-600">Confirmação recebida!</h3>
-                      <p className="text-sm text-[#F2B21C]">Você confirmou presença para:</p>
-                      <ul className="text-left text-sm list-disc list-inside">
-                        {convidados.map((c, i) => (
-                          <li key={i}>
-                            {c.nome || c.nomeConvidado || 'Convidado'} – {c.status === 1 ? 'Confirmado' : 'Não comparecerá'}
-                            {c.crianca && c.status !== 0 && c.idade ? ` (${c.idade} anos)` : ''}
-                          </li>
-                        ))}
-                      </ul>
-                      <p className="text-sm">Você pode editar até <strong>{fimConfirmacao.toLocaleDateString('pt-BR')}</strong>.</p>
-                      <div className="mt-4">
-                        <CountdownTimer targetDate={fimConfirmacao} message="O período para edição se encerra em" />
-                      </div>
-                    </>
-                  )}
+                  {hoje >= inicioConfirmacao && hoje <= fimConfirmacao && confirmados && (() => {
+                    const dataLimiteEdicao = convidados
+                      .filter(c => c.status === 2 && c.dataRecusa)
+                      .map(c => new Date(new Date(c.dataRecusa).setDate(new Date(c.dataRecusa).getDate() + 3)));
+
+                    const menorDataLimite = dataLimiteEdicao.length > 0
+                      ? new Date(Math.min(...dataLimiteEdicao.map(d => d.getTime()), fimConfirmacao.getTime()))
+                      : fimConfirmacao;
+
+                    return (
+                      <>
+                        <CheckCircle className="mx-auto w-10 h-10 text-green-500" />
+                        <h3 className="text-xl font-semibold text-green-600">Confirmação recebida!</h3>
+                        <p className="text-sm text-[#F2B21C]">Você confirmou presença para:</p>
+                        <ul className="text-left text-sm list-disc list-inside">
+                          {convidados.map((c, i) => (
+                            <li key={i}>
+                              {c.nome || c.nomeConvidado || 'Convidado'} – {c.status === 1 ? 'Confirmado' : 'Não comparecerá'}
+                              {c.crianca && c.status !== 0 && c.idade ? ` (${c.idade} anos)` : ''}
+                              {c.status === 2 && c.dataRecusa && (
+                                <span className="text-red-400 text-xs ml-1 italic">
+                                  (Pode ser revertido até {new Date(new Date(c.dataRecusa).setDate(new Date(c.dataRecusa).getDate() + 3)).toLocaleDateString('pt-BR')})
+                                </span>
+                              )}
+                            </li>
+                          ))}
+                        </ul>
+                        <p className="text-sm">
+                          Você pode editar as confirmações até <strong>{fimConfirmacao.toLocaleDateString('pt-BR')}</strong>.
+                        </p>
+                        {convidados.some(c => c.status === 2 && c.dataRecusa) && (
+                          <p className="text-red-400 text-sm mt-1">
+                            Convidados que informaram não irão comparecer têm 3 dias para reverter após a data de recusa. Os demais podem editar até 30/07.
+                          </p>
+                        )}
+                        <div className="mt-4">
+                          <CountdownTimer targetDate={fimConfirmacao} message="O período para edição se encerra em" />
+                        </div>
+                      </>
+                    );
+                  })()}
 
                   {hoje > fimConfirmacao && confirmados && (
                     <>

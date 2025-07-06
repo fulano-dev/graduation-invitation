@@ -157,13 +157,14 @@ app.post('/api/buscaConvite', async (req, res) => {
     }
 
     const [rows] = await db.query(
-      "SELECT idConvidado, codigoConvite, nome, idade, email, telefone, status, crianca, entregue FROM convidados WHERE codigoConvite = ?",
+      "SELECT idConvidado, codigoConvite, nome, idade, email, telefone, status, crianca, entregue, dataRecusa FROM convidados WHERE codigoConvite = ?",
       [codigoConvite]
     );
 
     const convidadosComBoolean = rows.map((convidado) => ({
       ...convidado,
       crianca: Boolean(convidado.crianca),
+      dataRecusa: convidado.dataRecusa
     }));
 
     if (rows.length === 0) {
@@ -216,15 +217,33 @@ app.post('/api/confirmarPresenca', async (req, res) => {
     }
     // Busca os convidados antigos antes da atualização para comparar status
     const [convidadosAntigos] = await db.query(
-      "SELECT idConvidado, telefone, nome, status FROM convidados WHERE codigoConvite = ?",
+      "SELECT idConvidado, telefone, nome, status, dataRecusa FROM convidados WHERE codigoConvite = ?",
       [codigoConvite]
     );
     console.log("Antigos ", convidadosAntigos);
     const updatePromises = convidados.map(async (convidado) => {
       const { idConvidado, status, idade, crianca } = convidado;
+      const convidadoAtual = convidadosAntigos.find(c => c.idConvidado === idConvidado);
+      // Determina se deve manter dataRecusa antiga
+      let manterDataRecusa = false;
+      if (
+        convidadoAtual?.status === 2 &&
+        convidadoAtual?.dataRecusa
+      ) {
+        const dataRecusaDate = new Date(convidadoAtual.dataRecusa);
+        const dataLimite = new Date(dataRecusaDate);
+        dataLimite.setDate(dataLimite.getDate() + 3);
+        if (new Date() > dataLimite) {
+          manterDataRecusa = true;
+        }
+      }
+      const novaDataRecusa =
+        status === 2
+          ? (manterDataRecusa ? convidadoAtual?.dataRecusa : new Date())
+          : null;
       return db.query(
-        "UPDATE convidados SET status = ?, idade = ? WHERE idConvidado = ?",
-        [status, idade || null, idConvidado]
+        "UPDATE convidados SET status = ?, idade = ?, dataRecusa = ? WHERE idConvidado = ?",
+        [status, idade || null, novaDataRecusa, idConvidado]
       );
     });
 
@@ -277,13 +296,13 @@ app.post('/api/confirmarPresenca', async (req, res) => {
     let mensagemExtra = '';
     if (confirmadosList.length === 0 && recusadosList.length > 0) {
       mensagemExtra = `<p style="margin-top:20px;">Lamentamos que ninguém tenha podido confirmar a presença. 😢</p>
-      <p>Caso mudem de ideia, é possível acessar novamente o convite e confirmar até <strong>30/07/2025</strong>.</p>`;
+      <p>Caso mudem de ideia, é possível acessar novamente o convite e alterar sua resposta em até <strong>3 dias</strong> após a recusa.</p>`;
     } else if (recusadosList.length > 0) {
       const recusadosFormatado = recusadosList.join(', ').replace(/, ([^,]*)$/, ' e $1');
       const confirmadosFormatado = confirmadosList.join(', ').replace(/, ([^,]*)$/, ' e $1');
       mensagemExtra = `<p style="margin-top:20px;">Que pena que ${recusadosFormatado} não poderá(ão) comparecer. Sentiremos muita falta! 😔</p>
       <p>Mas estamos felizes que ${confirmadosFormatado} irá(ão) celebrar conosco! 🎉</p>
-      <p>Se houver mudança de planos, é possível atualizar até <strong>30/07/2025</strong>.</p>`;
+      <p>Se houver mudança de planos, é possível atualizar a resposta dos confirmados até 30/07/2025 e em até <strong>3 dias</strong> dos recusados.</p>`;
     }
 
     const [todosConvidados] = await db.query(`
@@ -355,7 +374,7 @@ app.post('/api/confirmarPresenca', async (req, res) => {
             <h2 style="color:#f2c14e;">Poxa, que pena! 😢</h2>
         <p>Recebi a confirmação de que infelizmente ninguém da sua família poderá comparecer à recepção da minha formatura.</p>
             <p>Sentirei muito a falta de vocês nesse dia tão importante.</p>
-            <p>Mas tudo bem, caso mude de ideia até <strong>30/07/2025</strong>, você ainda pode acessar o convite e atualizar a resposta.</p>
+            <p>Mas tudo bem, você ainda pode acessar o convite e alterar sua resposta <strong>dentro de 7 dias após a recusa</strong>.</p>
             <div style="margin-top:30px;">
               <a href="https://joaovargas.dev.br/formatura" target="_blank" style="text-decoration:none;">
                 <button style="background-color:#f2c14e;color:#000;font-weight:bold;border:none;padding:10px 20px;border-radius:6px;font-family:'TexGyreTermes',sans-serif;margin-right:10px;">
@@ -615,7 +634,7 @@ app.get('/api/listarConvidadosPorFamilia', async (req, res) => {
 app.post('/api/confirmarConvidado', async (req, res) => {
   try {
     const { idConvidado, enviaSMS } = req.body;
-    await db.query("UPDATE convidados SET status = 1 WHERE idConvidado = ?", [idConvidado]);
+    await db.query("UPDATE convidados SET status = 1, dataRecusa = NULL WHERE idConvidado = ?", [idConvidado]);
     // Adiciona registro de confirmação manual
     await db.query(
       "INSERT INTO Confirmacoes (codigoConvite, dataConfirmacao, emailConfirmacao) VALUES ((SELECT codigoConvite FROM convidados WHERE idConvidado = ?), NOW(), 'Confirmação Manual')",
@@ -658,7 +677,7 @@ app.post('/api/confirmarConvidado', async (req, res) => {
 app.post('/api/recusarConvidado', async (req, res) => {
   try {
     const { idConvidado } = req.body;
-    await db.query("UPDATE convidados SET status = 2 WHERE idConvidado = ?", [idConvidado]);
+    await db.query("UPDATE convidados SET status = 2, dataRecusa = NOW() WHERE idConvidado = ?", [idConvidado]);
     // Adiciona registro de recusa manual
     await db.query(
       "INSERT INTO Confirmacoes (codigoConvite, dataConfirmacao, emailConfirmacao) VALUES ((SELECT codigoConvite FROM convidados WHERE idConvidado = ?), NOW(), 'Confirmação Manual')",
