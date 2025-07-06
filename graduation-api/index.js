@@ -116,7 +116,7 @@ app.post('/api/enviarLembretePendentes', async (req, res) => {
     const [pendentes] = await db.query(`
       SELECT nome, telefone, codigoConvite 
       FROM convidados 
-      WHERE status = 4
+      WHERE status = 0
     `);
 
     // Busca mensagem SMS salva do backend
