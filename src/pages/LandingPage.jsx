@@ -25,8 +25,11 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
   const [newGuest, setNewGuest] = useState({ nome: '', telefone: '', codigoConvite: '', crianca: false });
   const [showEntregueModal, setShowEntregueModal] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  // Estado para modal de confirmação SMS
+  // Estado para modal de confirmação SMS (antigo)
   const [confirmarSMS, setConfirmarSMS] = useState({ mostrar: false, idConvidado: null });
+  // Novo estado para modal de confirmação de envio de SMS individual
+  const [showConfirmSMSModal, setShowConfirmSMSModal] = useState(false);
+  const [convidadoSelecionadoSMS, setConvidadoSelecionadoSMS] = useState(null);
 
   const [showDashboardModal, setShowDashboardModal] = useState(false);
   // Estado para mensagem WhatsApp e edição
@@ -37,6 +40,8 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
   const [showSMSModal, setShowSMSModal] = useState(false);
   const [smsMensagem, setSmsMensagem] = useState('');
   const [mensagemSmsSalva, setMensagemSmsSalva] = useState('');
+  // Estado para listaConvidados (exemplo: para uso em algum local futuro)
+  const [listaConvidados, setListaConvidados] = useState([]);
 
   useEffect(() => {
     // Recupera o código salvo no localStorage ao montar o componente
@@ -110,11 +115,13 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
       setFamilias((prev) =>
         prev.map((familia) => ({
           ...familia,
-          convidados: familia.convidados.map((convidado) =>
-            convidado.idConvidado === idConvidado
-              ? { ...convidado, status: novoStatus }
-              : convidado
-          ),
+          convidados: Array.isArray(familia.convidados)
+            ? familia.convidados.map((convidado) =>
+                convidado.idConvidado === idConvidado
+                  ? { ...convidado, status: novoStatus }
+                  : convidado
+              )
+            : familia.convidados,
         }))
       );
     } catch (err) {
@@ -167,7 +174,13 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
             setIsLoading(false);
             return;
           }
-          setConvidados(data.convidados);
+          // Garante que cada convidado tenha o campo 'codigo' para uso no SMS individual
+          setConvidados(
+            data.convidados.map(c => ({
+              ...c,
+              codigo: data.familia?.codigo
+            }))
+          );
           onOpenInvitation();
           setIsLoading(false);
         } else {
@@ -768,10 +781,11 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
                       </button>
                     </div>
                   </div>
-                  {(Array.isArray(familia.convidados) ? familia.convidados : []).map((convidado) => (
+                  {Array.isArray(familia.convidados) && familia.convidados.map((convidado) => (
+                    // conteúdo renderizado para cada convidado
                     <div key={convidado.idConvidado} className="flex justify-between items-center mb-2 p-2 bg-black/20 rounded-md">
                       <div style={{ display: 'flex', alignItems: 'center', width: '100%' }}>
-                        <p className="text-sm mb-0" style={{ marginBottom: 0 }}>
+                        <span className="text-sm mb-0" style={{ marginBottom: 0 }}>
                           {convidado.nome}
                           {convidado.crianca && (
                             <>
@@ -779,8 +793,7 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
                               {convidado.idade ? ` (${convidado.idade} anos)` : ''}
                             </>
                           )}
-                          
-                        </p>
+                        </span>
                         <div className="flex items-center gap-2 ml-auto">
                           <span title={convidado.status === 1 ? "Confirmado" : convidado.status === 2 ? "Recusado" : "Pendente"}>
                             {convidado.status === 1 ? "✅" : convidado.status === 2 ? "❌" : "⚠️"}
@@ -839,10 +852,22 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
                                     )}`}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="block w-full px-4 py-2 text-left text-green-700 hover:bg-green-50"
+                                    className="block w-full px-4 py-2 text-left text-green-700 hover:bg-green-50 botao-admin"
                                   >
                                     📲 WhatsApp
                                   </a>
+                                )}
+                                {/* Botão Enviar lembrete - apenas para status === 0 */}
+                                {convidado.status === 0 && (
+                                  <button
+                                    className="block w-full px-4 py-2 text-left text-green-700 hover:bg-green-50 botao-admin"
+                                    onClick={() => {
+                                      setConvidadoSelecionadoSMS(convidado);
+                                      setShowConfirmSMSModal(true);
+                                    }}
+                                  >
+                                    📩 Enviar lembrete
+                                  </button>
                                 )}
                                 <button
                                   onClick={() => {
@@ -1082,6 +1107,52 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
                 }}
               >
                 Não
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal visual de confirmação de envio de SMS individual */}
+      {showConfirmSMSModal && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <div className="bg-white rounded-lg p-6 shadow-md max-w-sm w-full text-center">
+            <p className="text-lg font-semibold mb-4">Confirmar envio de SMS</p>
+            <p className="mb-6">
+              Deseja realmente enviar o lembrete por SMS para <strong>{convidadoSelecionadoSMS?.nome}</strong>?
+            </p>
+            <div className="flex justify-center gap-4">
+              <button
+                className="bg-gray-300 hover:bg-gray-400 text-black px-4 py-2 rounded"
+                onClick={() => {
+                  setShowConfirmSMSModal(false);
+                  setConvidadoSelecionadoSMS(null);
+                }}
+              >
+                Cancelar
+              </button>
+              <button
+                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded"
+                onClick={async () => {
+                  const response = await fetch(`${API_URL}/api/sms/enviar-individual`, {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ convidado: convidadoSelecionadoSMS })
+                  });
+
+                  if (response.ok) {
+                    alert(`Lembrete enviado para ${convidadoSelecionadoSMS.nome}`);
+                  } else {
+                    alert('Erro ao enviar lembrete.');
+                  }
+
+                  setShowConfirmSMSModal(false);
+                  setConvidadoSelecionadoSMS(null);
+                }}
+              >
+                Confirmar envio
               </button>
             </div>
           </div>

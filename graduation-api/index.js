@@ -1030,6 +1030,36 @@ app.post('/api/marcarNaoEntregue', async (req, res) => {
   }
 });
 
+// Função para remover acentos de uma string
+function removerAcentos(str) {
+  return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
+
+// Endpoint para envio individual de SMS para um convidado
+app.post('/api/sms/enviar-individual', async (req, res) => {
+  const { convidado } = req.body;
+
+  // Garante que o campo codigo esteja presente para o endpoint funcionar corretamente
+  if (!convidado || !convidado.telefone || !convidado.nome || !convidado.idFamilia) {
+    return res.status(400).json({ error: 'Dados do convidado incompletos' });
+  }
+
+  try {
+    const [mensagemSalva] = await db.query("SELECT mensagem FROM mensagem WHERE service = 'sms' LIMIT 1");
+    const mensagemTexto = mensagemSalva[0]?.mensagem || '';
+    const nomeLimpo = removerAcentos(convidado.nome.split(' ')[0]);
+    const mensagemFinal = mensagemTexto
+      .replace('{name}', nomeLimpo)
+      .replace('{url}', `https://joaovargas.dev.br/formatura/?=${convidado.idFamilia}`);
+
+    const response = await enviarSMS(convidado.telefone, mensagemFinal);
+    res.json({ sucesso: true, log: response });
+  } catch (error) {
+    console.error('Erro ao enviar SMS individual:', error);
+    res.status(500).json({ error: 'Erro ao enviar SMS individual' });
+  }
+});
+
 process.on('uncaughtException', (err) => {
   console.error('Erro não tratado:', err);
 });
