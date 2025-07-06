@@ -594,6 +594,11 @@ app.get('/api/listarConvidadosPorFamilia', async (req, res) => {
       };
     });
 
+    // Recupera mensagens de serviço (whatsapp e sms)
+    const [mensagens] = await db.query("SELECT * FROM mensagem");
+    const whatsappMensagem = mensagens.find(m => m.service === 'whatsapp')?.mensagem || "";
+    const smsMensagem = mensagens.find(m => m.service === 'sms')?.mensagem || "";
+
     const familias = {};
     for (const row of rows) {
       if (!familias[row.codigoConvite]) {
@@ -608,7 +613,8 @@ app.get('/api/listarConvidadosPorFamilia', async (req, res) => {
         status: row.status,
         crianca: !!row.crianca,
         idade: row.idade,
-        telefone: row.telefone
+        telefone: row.telefone,
+        idFamilia: row.codigoConvite // Adicionado idFamilia para cada convidado
       });
       // Adiciona info de visita por família
       familias[row.codigoConvite].visita = visitasPorFamilia[row.codigoConvite] || {
@@ -623,7 +629,11 @@ app.get('/api/listarConvidadosPorFamilia', async (req, res) => {
       };
     }
 
-    res.status(200).json(familias);
+    res.status(200).json({
+      ...familias,
+      mensagemWhatsapp: whatsappMensagem,
+      mensagemSms: smsMensagem
+    });
   } catch (error) {
     console.error("Erro ao listar convidados:", error);
     res.status(500).json({ erro: "Erro ao listar convidados." });
@@ -670,6 +680,74 @@ app.post('/api/confirmarConvidado', async (req, res) => {
   } catch (error) {
     console.error("Erro ao confirmar convidado:", error);
     res.status(500).json({ erro: "Erro ao confirmar convidado." });
+  }
+});
+
+// Salva ou atualiza mensagem de serviço (como WhatsApp)
+app.post('/api/mensagem/salvar', async (req, res) => {
+  const { service, mensagem } = req.body;
+
+  if (!service || !mensagem) {
+    return res.status(400).json({ error: "Campos obrigatórios ausentes." });
+  }
+
+  // Validação especial para SMS
+  if (service === 'sms') {
+    try {
+      // Simula substituição dos placeholders
+      const nomeExemplo = "JoaoVargas123";
+      const urlExemplo = "https://joaovargas.dev.br/formatura/?=X";
+      let mensagemSimulada = mensagem
+        .replace("{name}", nomeExemplo)
+        .replace("{url}", urlExemplo)
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "");
+
+      const possuiUnicodeEspecial = /[^\x00-\x7F]/.test(mensagemSimulada);
+      const tamanho = mensagemSimulada.length;
+
+      if (possuiUnicodeEspecial) {
+        return res.status(400).json({ erro: "Mensagem contém caracteres não suportados (emojis, símbolos, etc)." });
+      }
+      if (tamanho > 160) {
+        return res.status(400).json({ erro: `Mensagem ultrapassa 160 caracteres. Atual: ${tamanho}` });
+      }
+    } catch (e) {
+      return res.status(400).json({ erro: "Erro ao validar mensagem SMS." });
+    }
+  }
+
+  try {
+    const [existente] = await db.query("SELECT id FROM mensagem WHERE service = ?", [service]);
+
+    if (existente.length > 0) {
+      await db.query("UPDATE mensagem SET mensagem = ? WHERE service = ?", [mensagem, service]);
+    } else {
+      await db.query("INSERT INTO mensagem (mensagem, service) VALUES (?, ?)", [mensagem, service]);
+    }
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error("Erro ao salvar mensagem:", error);
+    res.status(500).json({ error: "Erro ao salvar mensagem." });
+  }
+});
+
+// Recupera mensagem salva para um serviço (ex: whatsapp)
+app.get('/api/mensagem/:service', async (req, res) => {
+  const { service } = req.params;
+
+  try {
+    const [mensagens] = await db.query("SELECT mensagem FROM mensagem WHERE service = ?", [service]);
+
+    if (mensagens.length === 0) {
+      return res.status(404).json({ error: "Mensagem não encontrada." });
+    }
+
+    res.json({ mensagem: mensagens[0].mensagem });
+  } catch (error) {
+    console.error("Erro ao buscar mensagem:", error);
+    res.status(500).json({ error: "Erro ao buscar mensagem." });
   }
 });
 

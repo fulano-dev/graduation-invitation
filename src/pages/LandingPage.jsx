@@ -29,6 +29,10 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
   const [confirmarSMS, setConfirmarSMS] = useState({ mostrar: false, idConvidado: null });
 
   const [showDashboardModal, setShowDashboardModal] = useState(false);
+  // Estado para mensagem WhatsApp e edição
+  const [whatsappMensagem, setWhatsappMensagem] = useState("");
+  const [editandoMensagem, setEditandoMensagem] = useState(false);
+  const [mensagemEditada, setMensagemEditada] = useState("");
 
   useEffect(() => {
     // Recupera o código salvo no localStorage ao montar o componente
@@ -45,6 +49,27 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
       localStorage.setItem('codigoConvite', codeFromURL);
     }
   }, []);
+
+  // Carregar mensagem WhatsApp do backend ao abrir lista admin
+  useEffect(() => {
+    if (showListModal) {
+      // Busca convidados por família normalmente
+      fetch(`${API_URL}/api/listarConvidadosPorFamilia`)
+        .then(res => res.json())
+        .then(data => {
+          // Remove suporte à mensagem do backend, busca mensagem separadamente
+        })
+        .catch(() => {});
+      // Busca a mensagem do WhatsApp diretamente do endpoint dedicado
+      fetch(`${API_URL}/api/mensagem/whatsapp`)
+        .then((res) => res.json())
+        .then((mensagemData) => {
+          if (mensagemData?.mensagem) {
+            setWhatsappMensagem(mensagemData.mensagem);
+          }
+        });
+    }
+  }, [showListModal]);
 
   // Função para atualizar status de convidado (refatorada para SMS)
   const atualizarStatus = async (idConvidado, novoStatus, enviarSMS = null) => {
@@ -472,10 +497,50 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
                     alert("❌ Erro na requisição. Verifique sua conexão.");
                   });
               }}
-              className="mb-4 px-6 py-2 bg-[#F2B21C] text-black rounded-md hover:bg-[#bfa67e] font-['TexGyreTermes']"
+              className="mb-2 px-6 py-2 bg-[#F2B21C] text-black rounded-md hover:bg-[#bfa67e] font-['TexGyreTermes']"
             >
               📲 Enviar SMS Lembrete Pendentes
             </button>
+            {/* Botão e campo para editar mensagem WhatsApp */}
+            <button
+              className="mt-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded"
+              onClick={() => {
+                setMensagemEditada(whatsappMensagem);
+                setEditandoMensagem(true);
+              }}
+            >
+              Enviar WhatsApp
+            </button>
+            {editandoMensagem && (
+              <div className="mt-2 flex flex-col">
+                <textarea
+                  value={mensagemEditada}
+                  onChange={(e) => setMensagemEditada(e.target.value)}
+                  rows={5}
+                  className="w-full p-2 border border-gray-400 rounded resize-none"
+                  placeholder="Escreva sua mensagem. Use {name} e {url} como variáveis."
+                />
+                <button
+                  className="mt-2 self-end bg-blue-500 hover:bg-blue-600 text-white px-4 py-1 rounded"
+                  onClick={async () => {
+                    const res = await fetch(`${API_URL}/api/mensagem/salvar`, {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ service: "whatsapp", mensagem: mensagemEditada }),
+                    });
+                    if (res.ok) {
+                      setWhatsappMensagem(mensagemEditada);
+                      setEditandoMensagem(false);
+                      alert("Mensagem salva com sucesso!");
+                    } else {
+                      alert("Erro ao salvar a mensagem.");
+                    }
+                  }}
+                >
+                  Salvar Mensagem
+                </button>
+              </div>
+            )}
             <h2 className="text-2xl font-bold mb-4 font-['TexGyreTermes'] text-center">Lista de Convidados</h2>
             <input
               type="text"
@@ -506,15 +571,15 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
                 </label>
               ))}
             </div>
-            {familias
+            {(Array.isArray(familias) ? familias : [])
               .filter((familia) =>
                 searchTerm.trim() === '' ||
-                familia.convidados.some((convidado) =>
-                  convidado.nome.toLowerCase().includes(searchTerm.toLowerCase())
+                (Array.isArray(familia.convidados) ? familia.convidados : []).some((convidado) =>
+                  convidado.nome && convidado.nome.toLowerCase().includes(searchTerm.toLowerCase())
                 )
               )
               .map((familia) => {
-                const convidadosFiltrados = familia.convidados.filter((convidado) => {
+                const convidadosFiltrados = (Array.isArray(familia.convidados) ? familia.convidados : []).filter((convidado) => {
                   const matchesStatus =
                     selectedFilters.length === 0 ||
                     (selectedFilters.includes("confirmados") && convidado.status === 1) ||
@@ -529,7 +594,7 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
                   convidados: convidadosFiltrados,
                 };
               })
-              .filter((familia) => familia.convidados.length > 0)
+              .filter((familia) => Array.isArray(familia.convidados) && familia.convidados.length > 0)
               .map((familia, index) => (
                 <div key={index} className="mb-6 border-t border-[#F2B21C]/20 pt-4">
                   <div className="flex justify-between items-center">
@@ -569,9 +634,10 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
                       </button>
                     </div>
                   </div>
-                  {familia.convidados.map((convidado) => (
+                  {(Array.isArray(familia.convidados) ? familia.convidados : []).map((convidado) => (
                     <div key={convidado.idConvidado} className="flex justify-between items-center mb-2 p-2 bg-black/20 rounded-md">
-                        <span className="text-sm">
+                      <div style={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+                        <p className="text-sm mb-0" style={{ marginBottom: 0 }}>
                           {convidado.nome}
                           {convidado.crianca && (
                             <>
@@ -579,101 +645,131 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
                               {convidado.idade ? ` (${convidado.idade} anos)` : ''}
                             </>
                           )}
-                        </span>
-                      <div className="flex items-center gap-2">
-                        <span title={convidado.status === 1 ? "Confirmado" : convidado.status === 2 ? "Recusado" : "Pendente"}>
-                          {convidado.status === 1 ? "✅" : convidado.status === 2 ? "❌" : "⚠️"}
-                        </span>
-                        <button
-                          onClick={() => atualizarStatus(convidado.idConvidado, 1)}
-                          className="bg-green-600 text-black px-2 py-1 rounded-full text-xs hover:bg-green-700"
-                          title="Confirmar"
-                        >
-                          Confirmar
-                        </button>
-                        <button
-                          onClick={() => atualizarStatus(convidado.idConvidado, 2)}
-                          className="bg-red-600 text-black px-2 py-1 rounded-full text-xs hover:bg-red-700"
-                          title="Recusar"
-                        >
-                          Recusar
-                        </button>
-                        <div className="relative inline-block text-left">
-                          <button
-                            onClick={() =>
-                              setFamilias((prev) =>
-                                prev.map((f) =>
-                                  f.codigoConvite === familia.codigoConvite
-                                    ? {
-                                        ...f,
-                                        convidados: f.convidados.map((c) =>
-                                          c.idConvidado === convidado.idConvidado
-                                            ? { ...c, showMenu: !c.showMenu }
-                                            : { ...c, showMenu: false }
-                                        ),
-                                      }
-                                    : f
-                                )
-                              )
-                            }
-                            className="ml-2 px-2 py-1 bg-[#F2B21C] text-black rounded-full"
-                          >
-                            ⋮
-                          </button>
-
-                          {convidado.showMenu && (
-                            <div className="absolute z-10 mt-2 right-0 w-48 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5">
-                              <button
-                                onClick={() => atualizarStatus(convidado.idConvidado, 0)}
-                                className="block w-full px-4 py-2 text-left text-yellow-700 hover:bg-yellow-50"
-                              >
-                                ⚠️ Pendente
-                              </button>
-                              <button
-                                onClick={() => {
-                                  const confirmar = window.confirm("Tem certeza que deseja excluir este convidado?");
-                                  if (!confirmar) return;
-                                  fetch(`${API_URL}/api/deletarConvidado`, {
-                                    method: "POST",
-                                    headers: { "Content-Type": "application/json" },
-                                    body: JSON.stringify({ idConvidado: convidado.idConvidado }),
-                                  }).then(async (response) => {
-                                    if (response.ok) {
-                                      const res = await fetch(`${API_URL}/api/listarConvidadosPorFamilia`);
-                                      const data = await res.json();
-                                      if (res.ok && typeof data === "object") {
-                                        const familiasConvertidas = Object.entries(data).map(([codigoConvite, grupo]) => ({
-                                          codigoConvite,
-                                          ...grupo,
-                                        }));
-                                        setFamilias(familiasConvertidas);
-                                      }
-                                    } else {
-                                      alert("Erro ao excluir convidado.");
-                                    }
-                                  }).catch(() => alert("Erro na requisição."));
-                                }}
-                                className="block w-full px-4 py-2 text-left text-gray-700 hover:bg-gray-100"
-                              >
-                                🗑️ Excluir
-                              </button>
-                              <button
-                                onClick={() => {
-                                  setNewGuest({
-                                    idConvidado: convidado.idConvidado,
-                                    nome: convidado.nome,
-                                    telefone: convidado.telefone || '',
-                                    codigoConvite: familia.codigoConvite,
-                                    crianca: !!convidado.crianca,
-                                  });
-                                  setShowAddModal(true);
-                                }}
-                                className="block w-full px-4 py-2 text-left text-blue-700 hover:bg-blue-50"
-                              >
-                                ✏️ Editar
-                              </button>
-                            </div>
+                          {/* Botão WhatsApp para cada convidado com telefone */}
+                          {convidado.telefone && whatsappMensagem && (
+                            <a
+                              href={`https://wa.me/55${convidado.telefone.replace(/\D/g, "")}?text=${encodeURIComponent(
+                                whatsappMensagem
+                                  .replace("{name}", convidado.nome.split(" ")[0])
+                                  .replace("{url}", `https://joaovargas.dev.br/formatura/?=${convidado.idFamilia || convidado.id_familia || convidado.codigoConvite || 'erro'}`)
+                              )}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-green-600 underline ml-2"
+                            >
+                              WhatsApp
+                            </a>
                           )}
+                        </p>
+                        <div className="flex items-center gap-2 ml-auto">
+                          <span title={convidado.status === 1 ? "Confirmado" : convidado.status === 2 ? "Recusado" : "Pendente"}>
+                            {convidado.status === 1 ? "✅" : convidado.status === 2 ? "❌" : "⚠️"}
+                          </span>
+                          <button
+                            onClick={() => atualizarStatus(convidado.idConvidado, 1)}
+                            className="bg-green-600 text-black px-2 py-1 rounded-full text-xs hover:bg-green-700"
+                            title="Confirmar"
+                          >
+                            Confirmar
+                          </button>
+                          <button
+                            onClick={() => atualizarStatus(convidado.idConvidado, 2)}
+                            className="bg-red-600 text-black px-2 py-1 rounded-full text-xs hover:bg-red-700"
+                            title="Recusar"
+                          >
+                            Recusar
+                          </button>
+                          <div className="relative inline-block text-left">
+                            <button
+                              onClick={() =>
+                                setFamilias((prev) =>
+                                  (Array.isArray(prev) ? prev : []).map((f) =>
+                                    f.codigoConvite === familia.codigoConvite
+                                      ? {
+                                          ...f,
+                                          convidados: (Array.isArray(f.convidados) ? f.convidados : []).map((c) =>
+                                            c.idConvidado === convidado.idConvidado
+                                              ? { ...c, showMenu: !c.showMenu }
+                                              : { ...c, showMenu: false }
+                                          ),
+                                        }
+                                      : f
+                                  )
+                                )
+                              }
+                              className="ml-2 px-2 py-1 bg-[#F2B21C] text-black rounded-full"
+                            >
+                              ⋮
+                            </button>
+
+                            {convidado.showMenu && (
+                              <div className="absolute z-10 mt-2 right-0 w-48 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5">
+                                <button
+                                  onClick={() => atualizarStatus(convidado.idConvidado, 0)}
+                                  className="block w-full px-4 py-2 text-left text-yellow-700 hover:bg-yellow-50"
+                                >
+                                  ⚠️ Pendente
+                                </button>
+                                {convidado.telefone && (
+                                  <a
+                                    href={`https://wa.me/55${convidado.telefone.replace(/\D/g, "")}?text=${encodeURIComponent(
+                                      whatsappMensagem
+                                        .replace("{name}", convidado.nome.split(" ")[0])
+                                        .replace("{url}", `https://joaovargas.dev.br/formatura/?=${convidado.idFamilia || convidado.id_familia || convidado.codigoConvite || 'erro'}`)
+                                    )}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="block text-green-700 hover:underline my-1"
+                                  >
+                                    📲 WhatsApp
+                                  </a>
+                                )}
+                                <button
+                                  onClick={() => {
+                                    const confirmar = window.confirm("Tem certeza que deseja excluir este convidado?");
+                                    if (!confirmar) return;
+                                    fetch(`${API_URL}/api/deletarConvidado`, {
+                                      method: "POST",
+                                      headers: { "Content-Type": "application/json" },
+                                      body: JSON.stringify({ idConvidado: convidado.idConvidado }),
+                                    }).then(async (response) => {
+                                      if (response.ok) {
+                                        const res = await fetch(`${API_URL}/api/listarConvidadosPorFamilia`);
+                                        const data = await res.json();
+                                        if (res.ok && typeof data === "object") {
+                                          const familiasConvertidas = Object.entries(data).map(([codigoConvite, grupo]) => ({
+                                            codigoConvite,
+                                            ...grupo,
+                                          }));
+                                          setFamilias(familiasConvertidas);
+                                        }
+                                      } else {
+                                        alert("Erro ao excluir convidado.");
+                                      }
+                                    }).catch(() => alert("Erro na requisição."));
+                                  }}
+                                  className="block w-full px-4 py-2 text-left text-gray-700 hover:bg-gray-100"
+                                >
+                                  🗑️ Excluir
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    setNewGuest({
+                                      idConvidado: convidado.idConvidado,
+                                      nome: convidado.nome,
+                                      telefone: convidado.telefone || '',
+                                      codigoConvite: familia.codigoConvite,
+                                      crianca: !!convidado.crianca,
+                                    });
+                                    setShowAddModal(true);
+                                  }}
+                                  className="block w-full px-4 py-2 text-left text-blue-700 hover:bg-blue-50"
+                                >
+                                  ✏️ Editar
+                                </button>
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -889,10 +985,10 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
               <div className="bg-black/30 rounded-lg p-4 col-span-1 md:col-span-2">
                 <h3 className="font-bold text-lg mb-2">🎯 Limites da Festa</h3>
                 {(() => {
-                  const limiteAdultos = 84;
-                  const limiteCriancas = 12;
-                  const adultos = familias.reduce((acc, f) => acc + f.convidados.filter(c => (c.status === 0 || c.status === 1) && (!c.crianca || (c.idade && c.idade > 10))).length, 0);
-                  const criancas = familias.reduce((acc, f) => acc + f.convidados.filter(c => (c.status === 0 || c.status === 1) && c.crianca).length, 0);
+                const limiteAdultos = 84;
+                const limiteCriancas = 12;
+                const adultos = (Array.isArray(familias) ? familias : []).reduce((acc, f) => acc + (Array.isArray(f.convidados) ? f.convidados : []).filter(c => (c.status === 0 || c.status === 1) && (!c.crianca || (c.idade && c.idade > 10))).length, 0);
+                const criancas = (Array.isArray(familias) ? familias : []).reduce((acc, f) => acc + (Array.isArray(f.convidados) ? f.convidados : []).filter(c => (c.status === 0 || c.status === 1) && c.crianca).length, 0);
                   const adultosRestantes = Math.max(0, limiteAdultos - adultos);
                   const criancasRestantes = Math.max(0, limiteCriancas - criancas);
                   const grafico = (valor, limite) => {
@@ -920,10 +1016,10 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
               <div className="bg-black/30 rounded-lg p-4">
                 <h3 className="font-bold text-lg mb-2">👥 Convidados - Geral</h3>
                 {(() => {
-                  const total = familias.reduce((acc, f) => acc + f.convidados.length, 0);
-                  const confirmados = familias.reduce((acc, f) => acc + f.convidados.filter(c => c.status === 1).length, 0);
-                  const pendentes = familias.reduce((acc, f) => acc + f.convidados.filter(c => c.status === 0).length, 0);
-                  const recusados = familias.reduce((acc, f) => acc + f.convidados.filter(c => c.status === 2).length, 0);
+                  const total = (Array.isArray(familias) ? familias : []).reduce((acc, f) => acc + (Array.isArray(f.convidados) ? f.convidados.length : 0), 0);
+                  const confirmados = (Array.isArray(familias) ? familias : []).reduce((acc, f) => acc + (Array.isArray(f.convidados) ? f.convidados : []).filter(c => c.status === 1).length, 0);
+                  const pendentes = (Array.isArray(familias) ? familias : []).reduce((acc, f) => acc + (Array.isArray(f.convidados) ? f.convidados : []).filter(c => c.status === 0).length, 0);
+                  const recusados = (Array.isArray(familias) ? familias : []).reduce((acc, f) => acc + (Array.isArray(f.convidados) ? f.convidados : []).filter(c => c.status === 2).length, 0);
                   const reservados = confirmados + pendentes;
 
                   const dados = [
@@ -958,8 +1054,8 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
               <div className="bg-black/30 rounded-lg p-4">
                 <h3 className="font-bold text-lg mb-2">📨 Convites - Famílias</h3>
                 {(() => {
-                  const total = familias.length;
-                  const entregues = familias.filter(f => f.entregue).length;
+                  const total = Array.isArray(familias) ? familias.length : 0;
+                  const entregues = (Array.isArray(familias) ? familias : []).filter(f => f.entregue).length;
                   const faltando = total - entregues;
                   // Indigo para esta seção
                   const barColors = [
@@ -981,7 +1077,7 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
                 })()}
                 {/* Gráfico "Acessaram o Convite" e "Não acessaram o convite" com base apenas nas entregues */}
                 {(() => {
-                  const entregues = familias.filter(f => f.entregue);
+                  const entregues = (Array.isArray(familias) ? familias : []).filter(f => f.entregue);
                   const total = entregues.length;
                   const acessaram = entregues.filter(f => f.visita && f.visita.totalVisitas > 0).length;
                   const naoAcessaram = total - acessaram;
@@ -1008,10 +1104,10 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
               <div className="bg-black/30 rounded-lg p-4">
                 <h3 className="font-bold text-lg mb-2">✅ Confirmados por faixa</h3>
                 {(() => {
-                  const confirmados = familias.reduce((acc, f) => acc + f.convidados.filter(c => c.status === 1).length, 0);
-                  const adultos = familias.reduce((acc, f) => acc + f.convidados.filter(c => c.status === 1 && (!c.crianca || (c.idade && c.idade > 10))).length, 0);
-                  const criancas6a10 = familias.reduce((acc, f) => acc + f.convidados.filter(c => c.status === 1 && c.crianca && c.idade >= 6 && c.idade <= 10).length, 0);
-                  const criancas0a5 = familias.reduce((acc, f) => acc + f.convidados.filter(c => c.status === 1 && c.crianca && c.idade >= 0 && c.idade <= 5).length, 0);
+                  const confirmados = (Array.isArray(familias) ? familias : []).reduce((acc, f) => acc + (Array.isArray(f.convidados) ? f.convidados : []).filter(c => c.status === 1).length, 0);
+                  const adultos = (Array.isArray(familias) ? familias : []).reduce((acc, f) => acc + (Array.isArray(f.convidados) ? f.convidados : []).filter(c => c.status === 1 && (!c.crianca || (c.idade && c.idade > 10))).length, 0);
+                  const criancas6a10 = (Array.isArray(familias) ? familias : []).reduce((acc, f) => acc + (Array.isArray(f.convidados) ? f.convidados : []).filter(c => c.status === 1 && c.crianca && c.idade >= 6 && c.idade <= 10).length, 0);
+                  const criancas0a5 = (Array.isArray(familias) ? familias : []).reduce((acc, f) => acc + (Array.isArray(f.convidados) ? f.convidados : []).filter(c => c.status === 1 && c.crianca && c.idade >= 0 && c.idade <= 5).length, 0);
                   const data = [
                     { label: "Adultos", valor: adultos },
                     { label: "Crianças 6-10", valor: criancas6a10 },
@@ -1035,9 +1131,9 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
               <div className="bg-black/30 rounded-lg p-4">
                 <h3 className="font-bold text-lg mb-2">❌ Recusados por faixa</h3>
                 {(() => {
-                  const total = familias.reduce((acc, f) => acc + f.convidados.filter(c => c.status === 2).length, 0);
-                  const adultos = familias.reduce((acc, f) => acc + f.convidados.filter(c => c.status === 2 && (!c.crianca || (c.idade && c.idade > 10))).length, 0);
-                  const criancas = familias.reduce((acc, f) => acc + f.convidados.filter(c => c.status === 2 && c.crianca).length, 0);
+                  const total = (Array.isArray(familias) ? familias : []).reduce((acc, f) => acc + (Array.isArray(f.convidados) ? f.convidados : []).filter(c => c.status === 2).length, 0);
+                  const adultos = (Array.isArray(familias) ? familias : []).reduce((acc, f) => acc + (Array.isArray(f.convidados) ? f.convidados : []).filter(c => c.status === 2 && (!c.crianca || (c.idade && c.idade > 10))).length, 0);
+                  const criancas = (Array.isArray(familias) ? familias : []).reduce((acc, f) => acc + (Array.isArray(f.convidados) ? f.convidados : []).filter(c => c.status === 2 && c.crianca).length, 0);
                   const data = [
                     { label: "Adultos", valor: adultos },
                     { label: "Crianças", valor: criancas }
@@ -1060,9 +1156,9 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
               <div className="bg-black/30 rounded-lg p-4">
                 <h3 className="font-bold text-lg mb-2">📋 Reservados por faixa</h3>
                 {(() => {
-                  const total = familias.reduce((acc, f) => acc + f.convidados.filter(c => c.status === 0 || c.status === 1).length, 0);
-                  const adultos = familias.reduce((acc, f) => acc + f.convidados.filter(c => (c.status === 0 || c.status === 1) && (!c.crianca || (c.idade && c.idade > 10))).length, 0);
-                  const criancas = familias.reduce((acc, f) => acc + f.convidados.filter(c => (c.status === 0 || c.status === 1) && c.crianca).length, 0);
+                  const total = (Array.isArray(familias) ? familias : []).reduce((acc, f) => acc + (Array.isArray(f.convidados) ? f.convidados : []).filter(c => c.status === 0 || c.status === 1).length, 0);
+                  const adultos = (Array.isArray(familias) ? familias : []).reduce((acc, f) => acc + (Array.isArray(f.convidados) ? f.convidados : []).filter(c => (c.status === 0 || c.status === 1) && (!c.crianca || (c.idade && c.idade > 10))).length, 0);
+                  const criancas = (Array.isArray(familias) ? familias : []).reduce((acc, f) => acc + (Array.isArray(f.convidados) ? f.convidados : []).filter(c => (c.status === 0 || c.status === 1) && c.crianca).length, 0);
                   const data = [
                     { label: "Adultos", valor: adultos },
                     { label: "Crianças", valor: criancas }
@@ -1085,8 +1181,8 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
               <div className="bg-black/30 rounded-lg p-4">
                 <h3 className="font-bold text-lg mb-2">🕗 Pendentes por Faixa</h3>
                 {(() => {
-                  const pendentes = familias.reduce((acc, f) => acc + f.convidados.filter(c => c.status === 0).length, 0);
-                  const adultos = familias.reduce((acc, f) => acc + f.convidados.filter(c => c.status === 0 && (!c.crianca || (c.idade && c.idade > 10))).length, 0);
+                  const pendentes = (Array.isArray(familias) ? familias : []).reduce((acc, f) => acc + (Array.isArray(f.convidados) ? f.convidados : []).filter(c => c.status === 0).length, 0);
+                  const adultos = (Array.isArray(familias) ? familias : []).reduce((acc, f) => acc + (Array.isArray(f.convidados) ? f.convidados : []).filter(c => c.status === 0 && (!c.crianca || (c.idade && c.idade > 10))).length, 0);
                   const criancas = pendentes - adultos;
                   const data = [
                     { label: "Adultos", valor: adultos },
