@@ -116,20 +116,28 @@ app.post('/api/enviarLembretePendentes', async (req, res) => {
     const [pendentes] = await db.query(`
       SELECT nome, telefone, codigoConvite 
       FROM convidados 
-      WHERE status = 0
+      WHERE status = 4
     `);
+
+    // Busca mensagem SMS salva do backend
+    const [mensagens] = await db.query("SELECT mensagem FROM mensagem WHERE service = 'sms'");
+    const mensagemSmsSalva = mensagens.length > 0 ? mensagens[0].mensagem : "";
 
     const enviados = [];
     const ignorados = [];
 
     for (const convidado of pendentes) {
       if (convidado.telefone && convidado.telefone.replace(/\D/g, '').length >= 10) {
-        const primeiroNome = (convidado.nome?.split(' ')[0] || '')
+        // Normaliza nome para SMS (remove acentos e caracteres especiais)
+        const nomeLimpo = convidado.nome
+          .split(" ")[0]
           .normalize("NFD")
-          .replace(/[\u0300-\u036f]/g, "")
-          .substring(0, 15);
-        
-          const mensagem = `Eai ${primeiroNome}! Bora confirmar sua presenca na formatura do Joao? Confirme ate 30/07 em https://joaovargas.dev.br/formatura/?=${convidado.codigoConvite}`;
+          .replace(/[\u0300-\u036f]/g, "") // remove acentos
+          .replace(/[^\x00-\x7F]/g, "");   // remove emojis/unicode
+
+        const mensagem = mensagemSmsSalva
+          .replace("{name}", nomeLimpo)
+          .replace("{url}", `https://joaovargas.dev.br/formatura/?=${convidado.codigoConvite}`);
 
         await enviarSMS(convidado.telefone, mensagem);
         enviados.push({ nome: convidado.nome, telefone: convidado.telefone });
@@ -148,6 +156,20 @@ app.post('/api/enviarLembretePendentes', async (req, res) => {
     res.status(500).json({ erro: "Erro ao enviar lembretes." });
   }
 });
+
+// Endpoint para teste de SMS usando a mesma lógica de envio normal
+app.post('/api/mensagem/teste-sms', async (req, res) => {
+  const { numero, mensagem } = req.body;
+
+  try {
+    await enviarSMS(numero, mensagem); // Reutiliza a mesma função usada no envio normal
+    res.status(200).json({ success: true });
+  } catch (err) {
+    console.error('Erro ao enviar SMS de teste:', err);
+    res.status(500).json({ error: 'Falha ao enviar SMS de teste' });
+  }
+});
+
 app.post('/api/buscaConvite', async (req, res) => {
   try {
     const { codigoConvite } = req.body;

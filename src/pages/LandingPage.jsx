@@ -33,6 +33,10 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
   const [whatsappMensagem, setWhatsappMensagem] = useState("");
   const [editandoMensagem, setEditandoMensagem] = useState(false);
   const [mensagemEditada, setMensagemEditada] = useState("");
+  // Estados para modal de edição de SMS
+  const [showSMSModal, setShowSMSModal] = useState(false);
+  const [smsMensagem, setSmsMensagem] = useState('');
+  const [mensagemSmsSalva, setMensagemSmsSalva] = useState('');
 
   useEffect(() => {
     // Recupera o código salvo no localStorage ao montar o componente
@@ -50,7 +54,7 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
     }
   }, []);
 
-  // Carregar mensagem WhatsApp do backend ao abrir lista admin
+  // Carregar mensagem WhatsApp e SMS do backend ao abrir lista admin
   useEffect(() => {
     if (showListModal) {
       // Busca convidados por família normalmente
@@ -66,6 +70,14 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
         .then((mensagemData) => {
           if (mensagemData?.mensagem) {
             setWhatsappMensagem(mensagemData.mensagem);
+          }
+        });
+      // Busca a mensagem SMS do endpoint dedicado
+      fetch(`${API_URL}/api/mensagem/sms`)
+        .then((res) => res.json())
+        .then((mensagemData) => {
+          if (mensagemData?.mensagem) {
+            setMensagemSmsSalva(mensagemData.mensagem);
           }
         });
     }
@@ -509,8 +521,130 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
                 setEditandoMensagem(true);
               }}
             >
-              Enviar WhatsApp
+              Editar WhatsApp
             </button>
+            {/* Botão para editar mensagem SMS */}
+            <button
+              onClick={() => {
+                setSmsMensagem(mensagemSmsSalva || '');
+                setShowSMSModal(true);
+              }}
+              className="bg-yellow-500 hover:bg-yellow-600 text-white py-2 px-5 rounded text-sm mt-2"
+            >
+              ✏️ Editar mensagem SMS
+            </button>
+            {/* Botão para testar envio SMS */}
+            <button
+              onClick={async () => {
+                const nomeTeste = "JoaoVargas12345";
+                const urlTeste = "https://joaovargas.dev.br/formatura/?=X";
+
+                const mensagemTestada = mensagemSmsSalva
+                  .replace("{name}", nomeTeste)
+                  .replace("{url}", urlTeste)
+                  .normalize("NFD")
+                  .replace(/[\u0300-\u036f]/g, "")
+                  .replace(/[^\x00-\x7F]/g, "");
+
+                const contemAcentos = /[áàãâéêíîóôõúüçÁÀÃÂÉÊÍÎÓÔÕÚÜÇ]/.test(mensagemSmsSalva);
+                if (contemAcentos) {
+                  alert("A mensagem contém acentos. Remova os acentos antes de testar.");
+                  return;
+                }
+
+                if (mensagemTestada.length > 160) {
+                  alert(`Mensagem ultrapassa um segmento (tem ${mensagemTestada.length} caracteres).`);
+                  return;
+                }
+
+                const response = await fetch(`${API_URL}/api/mensagem/teste-sms`, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ numero: "+5551996121240", mensagem: mensagemTestada }),
+                });
+
+                if (response.ok) {
+                  alert("SMS de teste enviado com sucesso!");
+                } else {
+                  alert("Falha ao enviar SMS de teste.");
+                }
+              }}
+              className="bg-green-600 hover:bg-green-700 text-white py-1 px-3 rounded text-sm mt-2"
+            >
+              📲 Teste SMS
+            </button>
+      {/* Modal de edição SMS */}
+      {showSMSModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-md p-6 w-full max-w-md">
+            <h2 className="text-lg font-semibold mb-2">Editar mensagem SMS</h2>
+            <textarea
+              className="w-full border border-gray-300 rounded p-2 text-sm"
+              rows="5"
+              value={smsMensagem}
+              onChange={(e) => setSmsMensagem(e.target.value)}
+              placeholder="Digite a mensagem SMS com {name} e {url}"
+            />
+            <div className="text-xs text-gray-600 mt-1">
+              Caracteres usados:{' '}
+              {
+                smsMensagem
+                  .replace("{name}", "JoaoVargas12345") // 15 caracteres simulados
+                  .replace("{url}", "https://joaovargas.dev.br/formatura/?=X") // URL simulada
+                  .normalize("NFD")
+                  .replace(/[\u0300-\u036f]/g, "") // remove acentos
+                  .replace(/[^\x00-\x7F]/g, "") // remove emojis/unicode
+                  .length
+              } / 160
+            </div>
+            <div className="flex justify-end gap-2 mt-4">
+              <button
+                onClick={() => setShowSMSModal(false)}
+                className="bg-gray-300 hover:bg-gray-400 text-black py-1 px-3 rounded text-sm"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={async () => {
+                  // Validação de acentos antes do cálculo do comprimento da mensagem substituída
+                  const contemAcentos = /[áàãâéêíîóôõúüçÁÀÃÂÉÊÍÎÓÔÕÚÜÇ]/.test(smsMensagem);
+                  if (contemAcentos) {
+                    alert("A mensagem contém acentos. Remova todos os acentos para garantir o envio em um único segmento SMS.");
+                    return;
+                  }
+
+                  const nomeExemplo = "JoaoVargas12345";
+                  const urlExemplo = "https://joaovargas.dev.br/formatura/?=X";
+                  const mensagemSimulada = smsMensagem
+                    .replace("{name}", nomeExemplo)
+                    .replace("{url}", urlExemplo)
+                    .normalize("NFD")
+                    .replace(/[\u0300-\u036f]/g, "")
+                    .replace(/[^\x00-\x7F]/g, "");
+
+                  if (mensagemSimulada.length > 160) {
+                    alert(`Mensagem muito longa (${mensagemSimulada.length} caracteres)`);
+                    return;
+                  }
+
+                  await fetch(`${API_URL}/api/mensagem/salvar`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ service: "sms", mensagem: smsMensagem }),
+                  });
+
+                  setMensagemSmsSalva(smsMensagem);
+                  setShowSMSModal(false);
+                  alert("Mensagem SMS atualizada!");
+                }}
+                className="bg-yellow-500 hover:bg-yellow-600 text-white py-1 px-3 rounded text-sm"
+              >
+                Salvar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
             {editandoMensagem && (
               <div className="mt-2 flex flex-col">
                 <textarea
@@ -645,21 +779,7 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
                               {convidado.idade ? ` (${convidado.idade} anos)` : ''}
                             </>
                           )}
-                          {/* Botão WhatsApp para cada convidado com telefone */}
-                          {convidado.telefone && whatsappMensagem && (
-                            <a
-                              href={`https://wa.me/55${convidado.telefone.replace(/\D/g, "")}?text=${encodeURIComponent(
-                                whatsappMensagem
-                                  .replace("{name}", convidado.nome.split(" ")[0])
-                                  .replace("{url}", `https://joaovargas.dev.br/formatura/?=${convidado.idFamilia || convidado.id_familia || convidado.codigoConvite || 'erro'}`)
-                              )}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-green-600 underline ml-2"
-                            >
-                              WhatsApp
-                            </a>
-                          )}
+                          
                         </p>
                         <div className="flex items-center gap-2 ml-auto">
                           <span title={convidado.status === 1 ? "Confirmado" : convidado.status === 2 ? "Recusado" : "Pendente"}>
@@ -719,7 +839,7 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
                                     )}`}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="block text-green-700 hover:underline my-1"
+                                    className="block w-full px-4 py-2 text-left text-green-700 hover:bg-green-50"
                                   >
                                     📲 WhatsApp
                                   </a>
