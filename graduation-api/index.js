@@ -396,7 +396,7 @@ app.post('/api/confirmarPresenca', async (req, res) => {
             <h2 style="color:#f2c14e;">Poxa, que pena! 😢</h2>
         <p>Recebi a confirmação de que infelizmente ninguém da sua família poderá comparecer à recepção da minha formatura.</p>
             <p>Sentirei muito a falta de vocês nesse dia tão importante.</p>
-            <p>Mas tudo bem, você ainda pode acessar o convite e alterar sua resposta <strong>dentro de 7 dias após a recusa</strong>.</p>
+            <p>Mas tudo bem, você ainda pode acessar o convite e alterar sua resposta <strong>dentro de 3 dias após a recusa</strong>.</p>
             <div style="margin-top:30px;">
               <a href="https://joaovargas.dev.br/formatura" target="_blank" style="text-decoration:none;">
                 <button style="background-color:#f2c14e;color:#000;font-weight:bold;border:none;padding:10px 20px;border-radius:6px;font-family:'TexGyreTermes',sans-serif;margin-right:10px;">
