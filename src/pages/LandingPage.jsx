@@ -1176,8 +1176,8 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
               <div className="bg-black/30 rounded-lg p-4 col-span-1 md:col-span-2">
                 <h3 className="font-bold text-lg mb-2">🎯 Limites da Festa</h3>
                 {(() => {
-                const limiteAdultos = 84;
-                const limiteCriancas = 12;
+                const limiteAdultos = 86;
+                const limiteCriancas = 10;
                 const adultos = (Array.isArray(familias) ? familias : []).reduce((acc, f) => acc + (Array.isArray(f.convidados) ? f.convidados : []).filter(c => (c.status === 0 || c.status === 1) && (!c.crianca || (c.idade && c.idade > 10))).length, 0);
                 const criancas = (Array.isArray(familias) ? familias : []).reduce((acc, f) => acc + (Array.isArray(f.convidados) ? f.convidados : []).filter(c => (c.status === 0 || c.status === 1) && c.crianca).length, 0);
                   const adultosRestantes = Math.max(0, limiteAdultos - adultos);
