@@ -97,7 +97,7 @@ export default function MainContent({ convidados }) {
                     );
                   })()}
 
-                  {hoje > fimConfirmacao && confirmados && (
+                  {hoje > fimConfirmacao && convidados.some(c => c.status === 1) && (
                     <>
                       <CheckCircle className="mx-auto w-10 h-10 text-green-500" />
                       <h3 className="text-xl font-semibold text-green-600">Confirmação encerrada</h3>
@@ -114,7 +114,25 @@ export default function MainContent({ convidados }) {
                     </>
                   )}
 
-                  {hoje > fimConfirmacao && !confirmados && (
+                  {hoje > fimConfirmacao && convidados.every(c => c.status === 2) ? (
+                    <>
+                      <Info className="mx-auto w-10 h-10 text-red-600" />
+                      <h3 className="text-xl font-semibold text-red-500">Convite Recusado</h3>
+                      <p className="text-sm mt-2 text-[#F2B21C]">
+                        Todos os convidados vinculados a esse convite informaram que não comparecerão.
+                      </p>
+                      <ul className="text-left text-sm list-disc list-inside mt-2 text-[#F2B21C]">
+                        {convidados.map((c, i) => (
+                          <li key={i}>
+                            {c.nome || c.nomeConvidado || 'Convidado'} – Não comparecerá
+                          </li>
+                        ))}
+                      </ul>
+                      <p className="text-sm mt-2 text-[#F2B21C]">
+                        O prazo de confirmação se encerrou em 30/07/2025, portanto o acesso ao convite foi bloqueado. Em caso de dúvidas contate o João Pedro em 51 99612-1240
+                      </p>
+                    </>
+                  ) : hoje > fimConfirmacao && (!confirmados || convidados.every(c => c.status === 2)) ? (
                     <>
                       <Info className="mx-auto w-10 h-10 text-red-600" />
                       <h3 className="text-xl font-semibold text-red-500">Período encerrado</h3>
@@ -125,9 +143,9 @@ export default function MainContent({ convidados }) {
                         Por questões de organização, o acesso ao convite não está mais disponível. Caso tenha ocorrido algum imprevisto, entre em contato com o João para mais informações. 
                       </p>
                     </>
-                  )}
+                  ) : null}
 
-                  {hoje > fimConfirmacao && !confirmados ? (
+                  {hoje > fimConfirmacao && (!confirmados || convidados.every(c => c.status === 2)) ? (
                     <button
                       className="mt-4 px-4 py-2 bg-[#F2B21C] text-black rounded-md hover:bg-[#bfa67e] transition"
                       onClick={() => window.location.href = window.location.origin}

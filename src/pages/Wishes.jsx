@@ -364,7 +364,7 @@ const Wishes = ({ convidados = [] }) => {
               </div>
             )}
           </>
-        ) : convidadosMock.some(c => bloqueiosPorRecusa[c.idConvidado]) ? (
+        ) : convidadosMock.some(c => bloqueiosPorRecusa[c.idConvidado]) && !convidadosMock.some(c => c.status === 1) ? (
           <div className="bg-[#0f3e57] text-[#F2B21C] font-['TexGyreTermes'] text-center p-6 rounded-xl shadow-lg">
             <h2 className="text-2xl font-semibold mb-2">Confirmação de Presença</h2>
             <p className="text-sm mb-4">
