@@ -1178,67 +1178,74 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
                 {(() => {
                 const limiteAdultos = 86;
                 const limiteCriancas = 10;
-                const adultos = (Array.isArray(familias) ? familias : []).reduce((acc, f) => acc + (Array.isArray(f.convidados) ? f.convidados : []).filter(c => (c.status === 0 || c.status === 1) && (!c.crianca || (c.idade && c.idade > 10))).length, 0);
-                const criancas = (Array.isArray(familias) ? familias : []).reduce((acc, f) => acc + (Array.isArray(f.convidados) ? f.convidados : []).filter(c => (c.status === 0 || c.status === 1) && c.crianca).length, 0);
-                  const adultosRestantes = Math.max(0, limiteAdultos - adultos);
-                  const criancasRestantes = Math.max(0, limiteCriancas - criancas);
-                  const grafico = (valor, limite) => {
-                    const percentual = Math.min(100, Math.round((valor / limite) * 100));
-                    return (
-                      <div className="mb-3">
-                        <p className="text-sm">Reservado: <strong>{valor}</strong> / {limite} ({percentual}%) — Vagas: <strong>{limite - valor}</strong></p>
-                        <div className="w-full h-3 bg-blue-200 rounded-full">
-                          <div className="h-full bg-blue-500 rounded-full" style={{ width: `${percentual}%` }}></div>
-                        </div>
-                      </div>
-                    );
-                  };
+                // Só status === 1 contam como reservado
+                const adultos = (Array.isArray(familias) ? familias : []).reduce((acc, f) =>
+                  acc +
+                  (Array.isArray(f.convidados) ? f.convidados : [])
+                    .filter(c => c.status === 1 && (!c.crianca || (c.idade && c.idade > 10))).length,
+                  0
+                );
+                const criancas = (Array.isArray(familias) ? familias : []).reduce((acc, f) =>
+                  acc +
+                  (Array.isArray(f.convidados) ? f.convidados : [])
+                    .filter(c => c.status === 1 && c.crianca).length,
+                  0
+                );
+                const adultosRestantes = Math.max(0, limiteAdultos - adultos);
+                const criancasRestantes = Math.max(0, limiteCriancas - criancas);
+                const grafico = (valor, limite) => {
+                  const percentual = Math.min(100, Math.round((valor / limite) * 100));
                   return (
-                    <>
-                      <p className="font-semibold mb-1">Adultos</p>
-                      {grafico(adultos, limiteAdultos)}
-                      <p className="font-semibold mb-1">Crianças</p>
-                      {grafico(criancas, limiteCriancas)}
-                    </>
+                    <div className="mb-3">
+                      <p className="text-sm">Reservado: <strong>{valor}</strong> / {limite} ({percentual}%) — Vagas: <strong>{limite - valor}</strong></p>
+                      <div className="w-full h-3 bg-blue-200 rounded-full">
+                        <div className="h-full bg-blue-500 rounded-full" style={{ width: `${percentual}%` }}></div>
+                      </div>
+                    </div>
                   );
+                };
+                return (
+                  <>
+                    <p className="font-semibold mb-1">Adultos</p>
+                    {grafico(adultos, limiteAdultos)}
+                    <p className="font-semibold mb-1">Crianças</p>
+                    {grafico(criancas, limiteCriancas)}
+                  </>
+                );
                 })()}
               </div>
               {/* 1. Convidados Geral */}
               <div className="bg-black/30 rounded-lg p-4">
                 <h3 className="font-bold text-lg mb-2">👥 Convidados - Geral</h3>
                 {(() => {
+                  // NOVA REGRA: Reservados é só confirmados, pendentes são expirados (não aparecem nos gráficos principais)
                   const total = (Array.isArray(familias) ? familias : []).reduce((acc, f) => acc + (Array.isArray(f.convidados) ? f.convidados.length : 0), 0);
                   const confirmados = (Array.isArray(familias) ? familias : []).reduce((acc, f) => acc + (Array.isArray(f.convidados) ? f.convidados : []).filter(c => c.status === 1).length, 0);
-                  const pendentes = (Array.isArray(familias) ? familias : []).reduce((acc, f) => acc + (Array.isArray(f.convidados) ? f.convidados : []).filter(c => c.status === 0).length, 0);
                   const recusados = (Array.isArray(familias) ? familias : []).reduce((acc, f) => acc + (Array.isArray(f.convidados) ? f.convidados : []).filter(c => c.status === 2).length, 0);
-                  const reservados = confirmados + pendentes;
+                  // Pendentes/expirados
+                  const expirados = (Array.isArray(familias) ? familias : []).reduce((acc, f) => acc + (Array.isArray(f.convidados) ? f.convidados : []).filter(c => c.status === 0).length, 0);
+                  // Reservados agora é só confirmados
+                  const reservados = confirmados;
 
                   const dados = [
-                    { label: "Reservados", valor: reservados },
-                    { label: "Confirmados", valor: confirmados },
-                    { label: "Pendentes", valor: pendentes },
-                    { label: "Recusados", valor: recusados }
-                  ];
-
-                  // Cores: Reservados - amarelo, Confirmados - verde, Pendentes - laranja, Recusados - vermelho
-                  const barColors = [
-                    { bg: "bg-yellow-200", fg: "bg-yellow-500" }, // Reservados
-                    { bg: "bg-green-200", fg: "bg-green-500" },   // Confirmados
-                    { bg: "bg-orange-200", fg: "bg-orange-500" }, // Pendentes
-                    { bg: "bg-red-200", fg: "bg-red-500" },       // Recusados
+                    { label: "Confirmados", valor: confirmados, bg: "bg-green-200", fg: "bg-green-500" },
+                    { label: "Recusados", valor: recusados, bg: "bg-red-200", fg: "bg-red-500" },
+                    { label: "Expirados", valor: expirados, bg: "bg-orange-200", fg: "bg-orange-500" },
                   ];
 
                   return dados.map((item, idx) => {
-                    const percentual = Math.round((item.valor / total) * 100);
+                    const percentual = total > 0 ? Math.round((item.valor / total) * 100) : 0;
                     return (
                       <div key={idx} className="mb-2">
                         <p className="text-sm">{item.label}: <strong>{item.valor}</strong> ({percentual}%)</p>
-                        <div className={`w-full h-3 ${barColors[idx].bg} rounded-full`}>
-                          <div className={`h-full ${barColors[idx].fg} rounded-full`} style={{ width: `${percentual}%` }}></div>
+                        <div className={`w-full h-3 ${item.bg} rounded-full`}>
+                          <div className={`h-full ${item.fg} rounded-full`} style={{ width: `${percentual}%` }}></div>
                         </div>
                       </div>
                     );
                   });
+                  // Exibir pendentes/expirados apenas como info separada
+                  // <div className="mt-2 text-xs text-orange-300">Pendentes/Expirados: {expirados}</div>
                 })()}
               </div>
               {/* 2. Convites (Famílias) */}
@@ -1347,14 +1354,23 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
               <div className="bg-black/30 rounded-lg p-4">
                 <h3 className="font-bold text-lg mb-2">📋 Reservados por faixa</h3>
                 {(() => {
-                  const total = (Array.isArray(familias) ? familias : []).reduce((acc, f) => acc + (Array.isArray(f.convidados) ? f.convidados : []).filter(c => c.status === 0 || c.status === 1).length, 0);
-                  const adultos = (Array.isArray(familias) ? familias : []).reduce((acc, f) => acc + (Array.isArray(f.convidados) ? f.convidados : []).filter(c => (c.status === 0 || c.status === 1) && (!c.crianca || (c.idade && c.idade > 10))).length, 0);
-                  const criancas = (Array.isArray(familias) ? familias : []).reduce((acc, f) => acc + (Array.isArray(f.convidados) ? f.convidados : []).filter(c => (c.status === 0 || c.status === 1) && c.crianca).length, 0);
+                  // Reservados agora só confirmados
+                  const total = (Array.isArray(familias) ? familias : []).reduce((acc, f) =>
+                    acc + (Array.isArray(f.convidados) ? f.convidados : []).filter(c => c.status === 1).length, 0
+                  );
+                  const adultos = (Array.isArray(familias) ? familias : []).reduce((acc, f) =>
+                    acc + (Array.isArray(f.convidados) ? f.convidados : []).filter(c => c.status === 1 && (!c.crianca || (c.idade && c.idade > 10))).length,
+                    0
+                  );
+                  const criancas = (Array.isArray(familias) ? familias : []).reduce((acc, f) =>
+                    acc + (Array.isArray(f.convidados) ? f.convidados : []).filter(c => c.status === 1 && c.crianca).length,
+                    0
+                  );
                   const data = [
                     { label: "Adultos", valor: adultos },
                     { label: "Crianças", valor: criancas }
                   ];
-                  // Usar amarelo para reservados
+                  // Usar amarelo para reservados (mas agora só confirmados)
                   return data.map((item, idx) => {
                     const percentual = total > 0 ? Math.round((item.valor / total) * 100) : 0;
                     return (
@@ -1368,20 +1384,26 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
                   });
                 })()}
               </div>
-              {/* 6. Pendentes por Faixa */}
+              {/* 6. Expirados por Faixa */}
               <div className="bg-black/30 rounded-lg p-4">
-                <h3 className="font-bold text-lg mb-2">🕗 Pendentes por Faixa</h3>
+                <h3 className="font-bold text-lg mb-2">⏳ Expirados por Faixa</h3>
                 {(() => {
-                  const pendentes = (Array.isArray(familias) ? familias : []).reduce((acc, f) => acc + (Array.isArray(f.convidados) ? f.convidados : []).filter(c => c.status === 0).length, 0);
-                  const adultos = (Array.isArray(familias) ? familias : []).reduce((acc, f) => acc + (Array.isArray(f.convidados) ? f.convidados : []).filter(c => c.status === 0 && (!c.crianca || (c.idade && c.idade > 10))).length, 0);
-                  const criancas = pendentes - adultos;
+                  const expirados = (Array.isArray(familias) ? familias : []).reduce((acc, f) =>
+                    acc + (Array.isArray(f.convidados) ? f.convidados : []).filter(c => c.status === 0).length,
+                    0
+                  );
+                  const adultos = (Array.isArray(familias) ? familias : []).reduce((acc, f) =>
+                    acc + (Array.isArray(f.convidados) ? f.convidados : []).filter(c => c.status === 0 && (!c.crianca || (c.idade && c.idade > 10))).length,
+                    0
+                  );
+                  const criancas = expirados - adultos;
                   const data = [
                     { label: "Adultos", valor: adultos },
                     { label: "Crianças", valor: criancas }
                   ];
-                  // Usar laranja para pendentes
+                  // Usar laranja para expirados
                   return data.map((item, idx) => {
-                    const percentual = pendentes > 0 ? Math.round((item.valor / pendentes) * 100) : 0;
+                    const percentual = expirados > 0 ? Math.round((item.valor / expirados) * 100) : 0;
                     return (
                       <div key={idx} className="mb-2">
                         <p className="text-sm">{item.label}: <strong>{item.valor}</strong> ({percentual}%)</p>
