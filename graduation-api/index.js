@@ -173,8 +173,10 @@ app.post('/api/mensagem/teste-sms', async (req, res) => {
 
 app.post('/api/enviarFotoPorEmail', async (req, res) => {
   try {
+    console.log('[API] Recebida requisição para enviar foto por email:', req.body);
     const { telefone, imageUrl } = req.body;
     if (!telefone || !imageUrl) {
+      console.warn('[API] Dados obrigatórios ausentes: telefone ou imageUrl');
       return res.status(400).json({ erro: 'Telefone e imageUrl são obrigatórios.' });
     }
 
@@ -184,14 +186,18 @@ app.post('/api/enviarFotoPorEmail', async (req, res) => {
       [telefone]
     );
     if (rows.length === 0 || !rows[0].email) {
+      console.warn(`[API] Convidado não encontrado ou sem email para telefone: ${telefone}`);
       return res.status(404).json({ erro: 'Convidado não encontrado ou sem email.' });
     }
     const nome = rows[0].nome;
     const email = rows[0].email;
+    console.log(`[API] Encontrado convidado: ${nome}, email: ${email}`);
 
     // Baixa a imagem
+    console.log(`[API] Baixando imagem da URL: ${imageUrl}`);
     const response = await axios.get(imageUrl, { responseType: 'arraybuffer' });
     const imageBuffer = Buffer.from(response.data, 'binary');
+    console.log('[API] Imagem baixada com sucesso.');
 
     // Monta o email
     const mailOptions = {
@@ -214,10 +220,12 @@ app.post('/api/enviarFotoPorEmail', async (req, res) => {
       ]
     };
 
+    console.log(`[API] Enviando email para ${email}...`);
     await transporter.sendMail(mailOptions);
+    console.log(`[API] Email enviado com sucesso para ${email}.`);
     return res.status(200).json({ sucesso: true, mensagem: 'Email enviado com a foto!' });
   } catch (error) {
-    console.error('Erro ao enviar foto por email:', error);
+    console.error('[API] Erro ao enviar foto por email:', error);
     return res.status(500).json({ erro: 'Erro ao enviar email com foto.' });
   }
 });
