@@ -208,12 +208,14 @@ app.post('/api/enviarFotoPorEmail', async (req, res) => {
     const mailOptions = {
       from: `"João Pedro Vargas da Silva" <${process.env.EMAIL_USER}>`,
       to: email,
-      subject: 'Sua foto da festa! 🎉',
+      subject: 'Sua foto chegou! 🎉',
       html: `<div style=\"background-color:#000000;padding:20px;border-radius:10px;color:#F2B21C;font-family:'TexGyreTermes',sans-serif;text-align:center;\">
         <img src=\"https://i.imgur.com/h6JrguV.jpeg\" style=\"max-width:250px;width:100%;border-radius:8px;border:2px solid #F2B21C;margin-bottom:15px;display:block;margin-left:auto;margin-right:auto;\" />
-        <h2 style='color:#f2c14e;'>Sua foto da festa!</h2>
+        <h2 style='color:#f2c14e;'>Sua Foto na Minha Festa de Formatura!</h2>
         <p>Olá ${nome},<br>Segue em anexo a foto que você tirou na festa!<br></p>
-        <p>Quer tirar mais fotos para aparecer no telão? <a href='https://fotos.joaovargas.dev.br' target='_blank' style='color:#F2B21C;font-weight:bold;'>Clique aqui</a>!</p>
+        <p>Pelos próximos 30 minutos sua foto ficará sendo exibida no salão!</p>
+        <p>Quer tirar mais fotos para aparecer no telão ou ver todas as fotos tiradas pelos outros convidados? <a href='https://fotos.joaovargas.dev.br' target='_blank' style='color:#F2B21C;font-weight:bold;'>Clique aqui</a>!</p>
+        <p>As fotos de todos os familiares são sempre enviadas para o e-mail da pessoa que confirmou presença na sua família, ok?</p>
         <p style='margin-top:20px;'>Obrigado por participar desse momento especial!<br>João Pedro</p>
       </div>`,
       attachments: [
