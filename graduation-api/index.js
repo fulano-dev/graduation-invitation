@@ -116,7 +116,7 @@ app.post('/api/enviarLembretePendentes', async (req, res) => {
     const [pendentes] = await db.query(`
       SELECT nome, telefone, codigoConvite 
       FROM convidados 
-      WHERE status = 0
+      WHERE status = 1
     `);
 
     // Busca mensagem SMS salva do backend
@@ -520,7 +520,7 @@ app.post('/api/buscaCodigoConvitePorTelefone', async (req, res) => {
     }
 
     const [rows] = await db.query(
-      "SELECT codigoConvite FROM convidados WHERE telefone = ? LIMIT 1",
+      "SELECT codigoConvite, nome FROM convidados WHERE telefone = ? LIMIT 1",
       [telefone]
     );
 
@@ -528,7 +528,7 @@ app.post('/api/buscaCodigoConvitePorTelefone', async (req, res) => {
       return res.status(404).json({ encontrado: false, mensagem: "Nenhum convite encontrado para esse número de telefone." });
     }
 
-    return res.status(200).json({ encontrado: true, codigoConvite: rows[0].codigoConvite });
+    return res.status(200).json({ encontrado: true, codigoConvite: rows[0].codigoConvite, nome: rows[0].nome });
   } catch (error) {
     console.error("Erro ao buscar código de convite por telefone:", error);
     res.status(500).json({ erro: "Erro interno ao buscar código de convite." });
