@@ -1,3 +1,4 @@
+import axios from 'axios';
 import express from 'express';
 import cors from 'cors';
 import { db } from './db.js';
@@ -167,6 +168,57 @@ app.post('/api/mensagem/teste-sms', async (req, res) => {
   } catch (err) {
     console.error('Erro ao enviar SMS de teste:', err);
     res.status(500).json({ error: 'Falha ao enviar SMS de teste' });
+  }
+});
+
+app.post('/api/enviarFotoPorEmail', async (req, res) => {
+  try {
+    const { telefone, imageUrl } = req.body;
+    if (!telefone || !imageUrl) {
+      return res.status(400).json({ erro: 'Telefone e imageUrl são obrigatórios.' });
+    }
+
+    // Busca email do convidado pelo telefone
+    const [rows] = await db.query(
+      'SELECT nome, email FROM convidados WHERE telefone = ? LIMIT 1',
+      [telefone]
+    );
+    if (rows.length === 0 || !rows[0].email) {
+      return res.status(404).json({ erro: 'Convidado não encontrado ou sem email.' });
+    }
+    const nome = rows[0].nome;
+    const email = rows[0].email;
+
+    // Baixa a imagem
+    const response = await axios.get(imageUrl, { responseType: 'arraybuffer' });
+    const imageBuffer = Buffer.from(response.data, 'binary');
+
+    // Monta o email
+    const mailOptions = {
+      from: `"João Pedro Vargas da Silva" <${process.env.EMAIL_USER}>`,
+      to: email,
+      subject: 'Sua foto da festa! 🎉',
+      html: `<div style=\"background-color:#000000;padding:20px;border-radius:10px;color:#F2B21C;font-family:'TexGyreTermes',sans-serif;text-align:center;\">
+        <img src=\"https://i.imgur.com/h6JrguV.jpeg\" style=\"max-width:250px;width:100%;border-radius:8px;border:2px solid #F2B21C;margin-bottom:15px;display:block;margin-left:auto;margin-right:auto;\" />
+        <h2 style='color:#f2c14e;'>Sua foto da festa!</h2>
+        <p>Olá ${nome},<br>Segue em anexo a foto que você tirou na festa!<br></p>
+        <p>Quer tirar mais fotos para aparecer no telão? <a href='https://fotos.joaovargas.dev.br' target='_blank' style='color:#F2B21C;font-weight:bold;'>Clique aqui</a>!</p>
+        <p style='margin-top:20px;'>Obrigado por participar desse momento especial!<br>João Pedro</p>
+      </div>`,
+      attachments: [
+        {
+          filename: 'foto-festa.jpg',
+          content: imageBuffer,
+          contentType: response.headers['content-type'] || 'image/jpeg'
+        }
+      ]
+    };
+
+    await transporter.sendMail(mailOptions);
+    return res.status(200).json({ sucesso: true, mensagem: 'Email enviado com a foto!' });
+  } catch (error) {
+    console.error('Erro ao enviar foto por email:', error);
+    return res.status(500).json({ erro: 'Erro ao enviar email com foto.' });
   }
 });
 
