@@ -180,9 +180,14 @@ app.post('/api/enviarFotoPorEmail', async (req, res) => {
       return res.status(400).json({ erro: 'Telefone e imageUrl são obrigatórios.' });
     }
 
-    // Busca email do convidado pelo telefone
+    // Busca nome do convidado e email de confirmação pelo telefone (join com Confirmacoes)
     const [rows] = await db.query(
-      'SELECT nome, email FROM convidados WHERE telefone = ? LIMIT 1',
+      `SELECT c.nome, cf.emailConfirmacao as email
+       FROM convidados c
+       LEFT JOIN Confirmacoes cf ON c.codigoConvite = cf.codigoConvite
+       WHERE c.telefone = ? AND cf.emailConfirmacao IS NOT NULL AND cf.emailConfirmacao != 'Confirmação Manual'
+       ORDER BY cf.dataConfirmacao DESC
+       LIMIT 1`,
       [telefone]
     );
     if (rows.length === 0 || !rows[0].email) {
