@@ -532,8 +532,25 @@ app.post('/api/buscaCodigoConvitePorTelefone', async (req, res) => {
       encontrado: true,
       codigoConvite: rows[0].codigoConvite,
       nome: rows[0].nome,
-      avatar: rows[0].avatar || null
+      avatar: rows[0].avatar ? `https://joaovargas.dev.br/api/avatar/${encodeURIComponent(telefone)}` : null
     });
+// Endpoint para servir avatar como imagem PNG
+app.get('/api/avatar/:telefone', async (req, res) => {
+  try {
+    const { telefone } = req.params;
+    const [rows] = await db.query("SELECT avatar FROM convidados WHERE telefone = ? LIMIT 1", [telefone]);
+    if (!rows.length || !rows[0].avatar) {
+      return res.status(404).send('Avatar não encontrado.');
+    }
+
+    const imgBuffer = Buffer.from(rows[0].avatar, 'base64');
+    res.setHeader('Content-Type', 'image/png');
+    res.send(imgBuffer);
+  } catch (err) {
+    console.error("Erro ao retornar avatar:", err);
+    res.status(500).send('Erro ao buscar avatar.');
+  }
+});
   } catch (error) {
     console.error("Erro ao buscar código de convite por telefone:", error);
     res.status(500).json({ erro: "Erro interno ao buscar código de convite." });
