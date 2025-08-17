@@ -520,7 +520,7 @@ app.post('/api/buscaCodigoConvitePorTelefone', async (req, res) => {
     }
 
     const [rows] = await db.query(
-      "SELECT codigoConvite, nome, avatar FROM convidados WHERE telefone = ? LIMIT 1",
+    "SELECT codigoConvite, nome, avatar, email FROM convidados WHERE telefone = ? LIMIT 1",
       [telefone]
     );
 
@@ -532,7 +532,8 @@ app.post('/api/buscaCodigoConvitePorTelefone', async (req, res) => {
       encontrado: true,
       codigoConvite: rows[0].codigoConvite,
       nome: rows[0].nome,
-      avatar: rows[0].avatar ? `https://graduation-invitation-production.up.railway.app/api/avatar/${encodeURIComponent(telefone)}` : null
+      avatar: rows[0].avatar ? `https://graduation-invitation-production.up.railway.app/api/avatar/${encodeURIComponent(telefone)}` : null,
+      email: rows[0].email
     });
   } catch (error) {
     console.error("Erro ao buscar código de convite por telefone:", error);
