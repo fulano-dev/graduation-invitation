@@ -532,8 +532,14 @@ app.post('/api/buscaCodigoConvitePorTelefone', async (req, res) => {
       encontrado: true,
       codigoConvite: rows[0].codigoConvite,
       nome: rows[0].nome,
-      avatar: rows[0].avatar ? `https://joaovargas.dev.br/api/avatar/${encodeURIComponent(telefone)}` : null
+      avatar: rows[0].avatar ? `https://graduation-invitation-production.up.railway.app/api/avatar/${encodeURIComponent(telefone)}` : null
     });
+  } catch (error) {
+    console.error("Erro ao buscar código de convite por telefone:", error);
+    res.status(500).json({ erro: "Erro interno ao buscar código de convite." });
+  }
+});
+
 // Endpoint para servir avatar como imagem PNG
 app.get('/api/avatar/:telefone', async (req, res) => {
   try {
@@ -549,11 +555,6 @@ app.get('/api/avatar/:telefone', async (req, res) => {
   } catch (err) {
     console.error("Erro ao retornar avatar:", err);
     res.status(500).send('Erro ao buscar avatar.');
-  }
-});
-  } catch (error) {
-    console.error("Erro ao buscar código de convite por telefone:", error);
-    res.status(500).json({ erro: "Erro interno ao buscar código de convite." });
   }
 });
 
