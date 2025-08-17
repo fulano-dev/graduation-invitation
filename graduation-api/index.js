@@ -520,7 +520,7 @@ app.post('/api/buscaCodigoConvitePorTelefone', async (req, res) => {
     }
 
     const [rows] = await db.query(
-      "SELECT codigoConvite, nome FROM convidados WHERE telefone = ? LIMIT 1",
+      "SELECT codigoConvite, nome, avatar FROM convidados WHERE telefone = ? LIMIT 1",
       [telefone]
     );
 
@@ -528,7 +528,12 @@ app.post('/api/buscaCodigoConvitePorTelefone', async (req, res) => {
       return res.status(404).json({ encontrado: false, mensagem: "Nenhum convite encontrado para esse número de telefone." });
     }
 
-    return res.status(200).json({ encontrado: true, codigoConvite: rows[0].codigoConvite, nome: rows[0].nome });
+    return res.status(200).json({
+      encontrado: true,
+      codigoConvite: rows[0].codigoConvite,
+      nome: rows[0].nome,
+      avatar: rows[0].avatar || null
+    });
   } catch (error) {
     console.error("Erro ao buscar código de convite por telefone:", error);
     res.status(500).json({ erro: "Erro interno ao buscar código de convite." });
@@ -883,18 +888,25 @@ app.post('/api/adicionarConvidado', async (req, res) => {
 });
 
 app.post('/api/editarConvidado', async (req, res) => {
-    const { idConvidado, nome, telefone, codigoConvite, crianca, idade } = req.body;
-  
+    const { idConvidado, nome, telefone, codigoConvite, crianca, idade, avatar } = req.body;
+
     if (!idConvidado || !nome || !codigoConvite) {
       return res.status(400).json({ erro: 'Campos obrigatórios ausentes.' });
     }
-  
+
     try {
+      // Atualiza avatar se fornecido
+      if (avatar) {
+        await db.query(
+          'UPDATE convidados SET avatar = ? WHERE idConvidado = ?',
+          [avatar, idConvidado]
+        );
+      }
       await db.query(
         'UPDATE convidados SET nome = ?, telefone = ?, codigoConvite = ?, crianca = ?, idade = ? WHERE idConvidado = ?',
         [nome, telefone, codigoConvite, crianca ? 1 : 0, idade ?? null, idConvidado]
       );
-  
+
       res.status(200).json({ sucesso: true });
       await transporter.sendMail({
         from: `"João Pedro - Sistema" <${process.env.EMAIL_USER}>`,

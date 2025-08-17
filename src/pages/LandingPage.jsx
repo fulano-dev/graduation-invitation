@@ -1012,6 +1012,22 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
               onChange={(e) => setNewGuest({ ...newGuest, codigoConvite: e.target.value })}
               className="w-full mb-2 px-4 py-2 border border-[#F2B21C]/40 bg-black/20 text-[#F2B21C] rounded-md"
             />
+            {/* Avatar upload */}
+            <input
+              type="file"
+              accept="image/png"
+              onChange={async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                  const base64 = reader.result.split(',')[1]; // remove o prefixo data:image/png;base64,
+                  setNewGuest(prev => ({ ...prev, avatar: base64 }));
+                };
+                reader.readAsDataURL(file);
+              }}
+              className="w-full mb-2 px-4 py-2 border border-[#F2B21C]/40 bg-black/20 text-[#F2B21C] rounded-md"
+            />
             <label className="flex items-center mb-4">
               <input
                 type="checkbox"
@@ -1037,13 +1053,17 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
                     const url = newGuest.idConvidado
                       ? `${API_URL}/api/editarConvidado`
                       : `${API_URL}/api/adicionarConvidado`;
- 
+
                     const response = await fetch(url, {
                       method: 'POST',
                       headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ ...newGuest, idade: newGuest.crianca ? newGuest.idade : null })
+                      body: JSON.stringify({
+                        ...newGuest,
+                        idade: newGuest.crianca ? newGuest.idade : null,
+                        avatar: newGuest.avatar || null,
+                      })
                     });
- 
+
                     if (response.ok) {
                       alert(newGuest.idConvidado ? 'Convidado atualizado com sucesso!' : 'Convidado adicionado com sucesso!');
                       const res = await fetch(`${API_URL}/api/listarConvidadosPorFamilia`);
