@@ -1,3 +1,4 @@
+import axios from 'axios';
 import express from 'express';
 import cors from 'cors';
 import { db } from './db.js';
@@ -167,6 +168,72 @@ app.post('/api/mensagem/teste-sms', async (req, res) => {
   } catch (err) {
     console.error('Erro ao enviar SMS de teste:', err);
     res.status(500).json({ error: 'Falha ao enviar SMS de teste' });
+  }
+});
+
+app.post('/api/enviarFotoPorEmail', async (req, res) => {
+  try {
+    console.log('[API] Recebida requisição para enviar foto por email:', req.body);
+    const { telefone, imageUrl } = req.body;
+    if (!telefone || !imageUrl) {
+      console.warn('[API] Dados obrigatórios ausentes: telefone ou imageUrl');
+      return res.status(400).json({ erro: 'Telefone e imageUrl são obrigatórios.' });
+    }
+
+    // Busca nome do convidado e email de confirmação pelo telefone (join com Confirmacoes)
+    const [rows] = await db.query(
+      `SELECT c.nome, cf.emailConfirmacao as email
+       FROM convidados c
+       LEFT JOIN Confirmacoes cf ON c.codigoConvite = cf.codigoConvite
+       WHERE c.telefone = ? AND cf.emailConfirmacao IS NOT NULL AND cf.emailConfirmacao != 'Confirmação Manual'
+       ORDER BY cf.dataConfirmacao DESC
+       LIMIT 1`,
+      [telefone]
+    );
+    if (rows.length === 0 || !rows[0].email) {
+      console.warn(`[API] Convidado não encontrado ou sem email para telefone: ${telefone}`);
+      return res.status(404).json({ erro: 'Convidado não encontrado ou sem email.' });
+    }
+    const nome = rows[0].nome;
+    const email = rows[0].email;
+    console.log(`[API] Encontrado convidado: ${nome}, email: ${email}`);
+
+    // Baixa a imagem
+    console.log(`[API] Baixando imagem da URL: ${imageUrl}`);
+    const response = await axios.get(imageUrl, { responseType: 'arraybuffer' });
+    const imageBuffer = Buffer.from(response.data, 'binary');
+    console.log('[API] Imagem baixada com sucesso.');
+
+    // Monta o email
+    const mailOptions = {
+      from: `"João Pedro Vargas da Silva" <${process.env.EMAIL_USER}>`,
+      to: email,
+      subject: 'Sua foto chegou! 🎉',
+      html: `<div style=\"background-color:#000000;padding:20px;border-radius:10px;color:#F2B21C;font-family:'TexGyreTermes',sans-serif;text-align:center;\">
+        <img src=\"https://i.imgur.com/h6JrguV.jpeg\" style=\"max-width:250px;width:100%;border-radius:8px;border:2px solid #F2B21C;margin-bottom:15px;display:block;margin-left:auto;margin-right:auto;\" />
+        <h2 style='color:#f2c14e;'>Sua Foto na Minha Festa de Formatura!</h2>
+        <p>Olá ${nome},<br>Segue em anexo a foto que você tirou na festa!<br></p>
+        <p>Pelos próximos 30 minutos sua foto ficará sendo exibida no salão!</p>
+        <p>Quer tirar mais fotos para aparecer no telão ou ver todas as fotos tiradas pelos outros convidados? <a href='https://fotos.joaovargas.dev.br' target='_blank' style='color:#F2B21C;font-weight:bold;'>Clique aqui</a>!</p>
+        <p>As fotos de todos os familiares são sempre enviadas para o e-mail da pessoa que confirmou presença na sua família, ok?</p>
+        <p style='margin-top:20px;'>Obrigado por participar desse momento especial!<br>João Pedro</p>
+      </div>`,
+      attachments: [
+        {
+          filename: 'foto-festa.jpg',
+          content: imageBuffer,
+          contentType: response.headers['content-type'] || 'image/jpeg'
+        }
+      ]
+    };
+
+    console.log(`[API] Enviando email para ${email}...`);
+    await transporter.sendMail(mailOptions);
+    console.log(`[API] Email enviado com sucesso para ${email}.`);
+    return res.status(200).json({ sucesso: true, mensagem: 'Email enviado com a foto!' });
+  } catch (error) {
+    console.error('[API] Erro ao enviar foto por email:', error);
+    return res.status(500).json({ erro: 'Erro ao enviar email com foto.' });
   }
 });
 
@@ -520,7 +587,7 @@ app.post('/api/buscaCodigoConvitePorTelefone', async (req, res) => {
     }
 
     const [rows] = await db.query(
-      "SELECT codigoConvite, nome, avatar FROM convidados WHERE telefone = ? LIMIT 1",
+    "SELECT codigoConvite, nome, avatar, email FROM convidados WHERE telefone = ? LIMIT 1",
       [telefone]
     );
 
@@ -532,7 +599,8 @@ app.post('/api/buscaCodigoConvitePorTelefone', async (req, res) => {
       encontrado: true,
       codigoConvite: rows[0].codigoConvite,
       nome: rows[0].nome,
-      avatar: rows[0].avatar ? `https://graduation-invitation-production.up.railway.app/api/avatar/${encodeURIComponent(telefone)}` : null
+      avatar: rows[0].avatar ? `https://graduation-invitation-production.up.railway.app/api/avatar/${encodeURIComponent(telefone)}` : null,
+      email: rows[0].email
     });
   } catch (error) {
     console.error("Erro ao buscar código de convite por telefone:", error);
