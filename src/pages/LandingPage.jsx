@@ -1021,8 +1021,17 @@ const LandingPage = ({ onOpenInvitation, setConvidados }) => {
                 if (!file) return;
                 const reader = new FileReader();
                 reader.onloadend = () => {
-                  const base64 = reader.result.split(',')[1]; // remove o prefixo data:image/png;base64,
-                  setNewGuest(prev => ({ ...prev, avatar: base64 }));
+                  const img = new window.Image();
+                  img.src = reader.result;
+                  img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = img.width / 2;
+                    canvas.height = img.height / 2;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    const resizedBase64 = canvas.toDataURL('image/png').split(',')[1];
+                    setNewGuest(prev => ({ ...prev, avatar: resizedBase64 }));
+                  };
                 };
                 reader.readAsDataURL(file);
               }}
