@@ -93,13 +93,99 @@ async function enviarSMS(telefone, mensagem) {
     console.log("⚠️ Nenhum provedor de SMS configurado corretamente.");
   }
 }
+const EMAIL_ENABLED = process.env.EMAIL_ENABLED !== 'false';
+const BREVO_TOKEN = process.env.BREVO_TOKEN || '';
+// SMTP (somente para desenvolvimento/local)
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS
-  }
+  },
+  pool: true,
+  maxConnections: 2,
+  maxMessages: 50,
+  rateDelta: 10000,
+  rateLimit: 8,
+  connectionTimeout: 5000,
+  greetingTimeout: 5000,
+  socketTimeout: 10000
 });
+
+// Envia email via Brevo HTTP API (recomendado p/ Railway). Fallback para SMTP local se BREVO_TOKEN ausente.
+async function safeSendMail(options) {
+  try {
+    if (!EMAIL_ENABLED) {
+      console.log("EMAIL_ENABLED=false → envio de email desabilitado. Payload ignorado.");
+      return;
+    }
+    if (BREVO_TOKEN) {
+      // Monta payload Brevo
+      const payload = {
+        sender: {
+          email: process.env.EMAIL_USER,
+          name: (options.from && typeof options.from === 'string')
+            ? options.from.replace(/.*<([^>]+)>.*/, '$1') === process.env.EMAIL_USER
+              ? options.from.replace(/\s*<[^>]+>.*/, '')
+              : "Formatura"
+            : "Formatura"
+        },
+        to: Array.isArray(options.to)
+          ? options.to.map(e => ({ email: e }))
+          : [{ email: options.to }],
+        subject: options.subject || '',
+        htmlContent: options.html || ''
+      };
+      // attachments (file path or Buffer)
+      if (options.attachments && Array.isArray(options.attachments) && options.attachments.length > 0) {
+        payload.attachment = [];
+        for (const att of options.attachments) {
+          let name = att.filename || 'anexo';
+          let contentBase64 = '';
+          if (att.path) {
+            const buf = fs.readFileSync(att.path);
+            contentBase64 = buf.toString('base64');
+          } else if (att.content) {
+            const buf = Buffer.isBuffer(att.content) ? att.content : Buffer.from(att.content);
+            contentBase64 = buf.toString('base64');
+          }
+          payload.attachment.push({ name, content: contentBase64 });
+        }
+      }
+      // Envio não-bloqueante
+      setImmediate(async () => {
+        try {
+          const resp = await fetch('https://api.brevo.com/v3/smtp/email', {
+            method: 'POST',
+            headers: {
+              'accept': 'application/json',
+              'content-type': 'application/json',
+              'api-key': BREVO_TOKEN
+            },
+            body: JSON.stringify(payload)
+          });
+          if (!resp.ok) {
+            const text = await resp.text();
+            console.error("Brevo HTTP falhou:", resp.status, text);
+          }
+        } catch (e) {
+          console.error("Erro ao enviar via Brevo HTTP:", e && e.message ? e.message : e);
+        }
+      });
+      return;
+    }
+    // Fallback SMTP (local/dev). NÃO USAR EM RAILWAY.
+    setImmediate(async () => {
+      try {
+        await transporter.sendMail(options);
+      } catch (e) {
+        console.error("Erro ao enviar via SMTP:", e && e.message ? e.message : e);
+      }
+    });
+  } catch (outerErr) {
+    console.error("Erro inesperado no safeSendMail:", outerErr && outerErr.message ? outerErr.message : outerErr);
+  }
+}
 import XLSX from 'xlsx';
 import path from 'path';
 import PDFDocument from 'pdfkit';
@@ -227,10 +313,10 @@ app.post('/api/enviarFotoPorEmail', async (req, res) => {
       ]
     };
 
-    console.log(`[API] Enviando email para ${email}...`);
-    await transporter.sendMail(mailOptions);
-    console.log(`[API] Email enviado com sucesso para ${email}.`);
-    return res.status(200).json({ sucesso: true, mensagem: 'Email enviado com a foto!' });
+    console.log(`[API] Enfileirando envio de email para ${email}...`);
+    safeSendMail(mailOptions);
+    console.log(`[API] Email agendado (não-bloqueante) para ${email}.`);
+    return res.status(200).json({ sucesso: true, mensagem: 'Processado. O envio do email foi agendado.' });
   } catch (error) {
     console.error('[API] Erro ao enviar foto por email:', error);
     return res.status(500).json({ erro: 'Erro ao enviar email com foto.' });
@@ -275,22 +361,18 @@ app.post('/api/buscaConvite', async (req, res) => {
       console.error("Erro ao registrar visita:", visitaError.message);
     }
     if (codigoConvite != 1240) {
-      try {
-        await transporter.sendMail({
-          from: `"João Pedro - Sistema" <${process.env.EMAIL_USER}>`,
-          to: "joaopedrovsilva102@gmail.com",
-          subject: `${nomePrincipal} abriu o convite!`,
-          html: `
-            <div style="background:#000;color:#F2B21C;padding:20px;border-radius:8px;font-family:'TexGyreTermes',sans-serif;">
-              <h2 style="color:#f2c14e;">Convite aberto por ${nomePrincipal}</h2>
-              <p>Veja abaixo o status atual dos convidados deste convite:</p>
-              <ul>${nomesStatus}</ul>
-            </div>
-          `
-        });
-      } catch (error) {
-        console.error("Erro ao enviar email:", error);
-      }
+      safeSendMail({
+        from: `"João Pedro - Sistema" <${process.env.EMAIL_USER}>`,
+        to: "joaopedrovsilva102@gmail.com",
+        subject: `${nomePrincipal} abriu o convite!`,
+        html: `
+          <div style="background:#000;color:#F2B21C;padding:20px;border-radius:8px;font-family:'TexGyreTermes',sans-serif;">
+            <h2 style="color:#f2c14e;">Convite aberto por ${nomePrincipal}</h2>
+            <p>Veja abaixo o status atual dos convidados deste convite:</p>
+            <ul>${nomesStatus}</ul>
+          </div>
+        `
+      });
     }
 
     const entregue = rows[0]?.entregue === 1;
@@ -548,16 +630,8 @@ app.post('/api/confirmarPresenca', async (req, res) => {
       }]
     };
 
-    try {
-      await transporter.sendMail(mailOptionsConvidado);
-    } catch (error) {
-      console.error("Erro ao enviar email:", error);
-    }
-    try {
-      await transporter.sendMail(mailOptionsAdmin);
-    } catch (error) {
-      console.error("Erro ao enviar email:", error);
-    }
+    safeSendMail(mailOptionsConvidado);
+    safeSendMail(mailOptionsAdmin);
 
     // Se ao menos 1 confirmado, cadastra e-mail no Brevo
     if (confirmadosList.length > 0 && emailConfirmacao) {
@@ -783,16 +857,12 @@ app.post('/api/confirmarConvidado', async (req, res) => {
     );
     const nomeConvidado = convidadoInfo?.nome || 'Convidado Desconhecido';
 
-    try {
-      await transporter.sendMail({
-        from: `"João Pedro - Sistema" <${process.env.EMAIL_USER}>`,
-        to: "joaopedrovsilva102@gmail.com",
-        subject: `Status alterado: ${nomeConvidado} confirmado`,
-        html: `<p>O convidado <strong>${nomeConvidado}</strong> (ID: ${idConvidado}) foi <strong>confirmado</strong> manualmente.</p>`
-      });
-    } catch (error) {
-      console.error("Erro ao enviar email:", error);
-    }
+    safeSendMail({
+      from: `"João Pedro - Sistema" <${process.env.EMAIL_USER}>`,
+      to: "joaopedrovsilva102@gmail.com",
+      subject: `Status alterado: ${nomeConvidado} confirmado`,
+      html: `<p>O convidado <strong>${nomeConvidado}</strong> (ID: ${idConvidado}) foi <strong>confirmado</strong> manualmente.</p>`
+    });
 
     // Envia SMS ao convidado se enviaSMS === 1 e telefone válido
     if (
@@ -897,16 +967,12 @@ app.post('/api/recusarConvidado', async (req, res) => {
       );
       const nomeConvidado = convidadoInfo?.nome || 'Convidado Desconhecido';
 
-      try {
-        await transporter.sendMail({
-          from: `"João Pedro - Sistema" <${process.env.EMAIL_USER}>`,
-          to: "joaopedrovsilva102@gmail.com",
-          subject: `Status alterado: ${nomeConvidado} recusado`,
-          html: `<p>O convidado <strong>${nomeConvidado}</strong> (ID: ${idConvidado}) foi <strong>recusado</strong> manualmente.</p>`
-        });
-      } catch (error) {
-        console.error("Erro ao enviar email:", error);
-      }
+      safeSendMail({
+        from: `"João Pedro - Sistema" <${process.env.EMAIL_USER}>`,
+        to: "joaopedrovsilva102@gmail.com",
+        subject: `Status alterado: ${nomeConvidado} recusado`,
+        html: `<p>O convidado <strong>${nomeConvidado}</strong> (ID: ${idConvidado}) foi <strong>recusado</strong> manualmente.</p>`
+      });
 
   } catch (error) {
     console.error("Erro ao recusar convidado:", error);
@@ -926,16 +992,12 @@ app.post('/api/pendenteConvidado', async (req, res) => {
       );
       const nomeConvidado = convidadoInfo?.nome || 'Convidado Desconhecido';
   
-      try {
-        await transporter.sendMail({
-          from: `"João Pedro - Sistema" <${process.env.EMAIL_USER}>`,
-          to: "joaopedrovsilva102@gmail.com",
-          subject: `Status alterado: ${nomeConvidado} pendente`,
-          html: `<p>O convidado <strong>${nomeConvidado}</strong> (ID: ${idConvidado}) foi marcado como <strong>pendente</strong> manualmente.</p>`
-        });
-      } catch (error) {
-        console.error("Erro ao enviar email:", error);
-      }
+      safeSendMail({
+        from: `"João Pedro - Sistema" <${process.env.EMAIL_USER}>`,
+        to: "joaopedrovsilva102@gmail.com",
+        subject: `Status alterado: ${nomeConvidado} pendente`,
+        html: `<p>O convidado <strong>${nomeConvidado}</strong> (ID: ${idConvidado}) foi marcado como <strong>pendente</strong> manualmente.</p>`
+      });
   } catch (error) {
     console.error("Erro ao marcar convidado como pendente:", error);
     res.status(500).json({ erro: "Erro ao atualizar status para pendente." });
@@ -952,16 +1014,12 @@ app.post('/api/deletarConvidado', async (req, res) => {
     const [[convidadoInfo]] = await db.query("SELECT nome FROM convidados WHERE idConvidado = ?", [idConvidado]);
     const nomeConvidado = convidadoInfo ? convidadoInfo.nome : 'Convidado desconhecido';
     await db.query("DELETE FROM convidados WHERE idConvidado = ?", [idConvidado]);
-    try {
-      await transporter.sendMail({
-        from: `"João Pedro - Sistema" <${process.env.EMAIL_USER}>`,
-        to: "joaopedrovsilva102@gmail.com",
-        subject: "Convidado deletado",
-        html: `<p>O convidado <strong>${nomeConvidado}</strong> (ID: ${idConvidado}) foi removido do sistema.</p>`
-      });
-    } catch (error) {
-      console.error("Erro ao enviar email:", error);
-    }
+    safeSendMail({
+      from: `"João Pedro - Sistema" <${process.env.EMAIL_USER}>`,
+      to: "joaopedrovsilva102@gmail.com",
+      subject: "Convidado deletado",
+      html: `<p>O convidado <strong>${nomeConvidado}</strong> (ID: ${idConvidado}) foi removido do sistema.</p>`
+    });
     res.status(200).json({ mensagem: "Convidado removido com sucesso." });
   } catch (error) {
     console.error("Erro ao remover convidado:", error);
@@ -981,24 +1039,20 @@ app.post('/api/adicionarConvidado', async (req, res) => {
       [nome, idade, telefone, email, codigoConvite, crianca]
     );
     res.status(200).json({ mensagem: "Convidado adicionado com sucesso." });
-    try {
-      await transporter.sendMail({
-          from: `"João Pedro - Sistema" <${process.env.EMAIL_USER}>`,
-          to: "joaopedrovsilva102@gmail.com",
-          subject: "Novo convidado adicionado",
-          html: `
-            <p>Um novo convidado foi adicionado:</p>
-            <ul>
-              <li>Nome: ${nome}</li>
-              <li>Telefone: ${telefone}</li>
-              <li>Código Convite: ${codigoConvite}</li>
-              <li>${crianca ? 'Criança' : 'Adulto'}${idade ? ` (${idade} anos)` : ''}</li>
-            </ul>
-          `
-        });
-    } catch (error) {
-      console.error("Erro ao enviar email:", error);
-    }
+    safeSendMail({
+      from: `"João Pedro - Sistema" <${process.env.EMAIL_USER}>`,
+      to: "joaopedrovsilva102@gmail.com",
+      subject: "Novo convidado adicionado",
+      html: `
+        <p>Um novo convidado foi adicionado:</p>
+        <ul>
+          <li>Nome: ${nome}</li>
+          <li>Telefone: ${telefone}</li>
+          <li>Código Convite: ${codigoConvite}</li>
+          <li>${crianca ? 'Criança' : 'Adulto'}${idade ? ` (${idade} anos)` : ''}</li>
+        </ul>
+      `
+    });
   } catch (error) {
     console.error("Erro ao adicionar convidado:", error);
     res.status(500).json({ erro: "Erro ao adicionar convidado." });
@@ -1026,23 +1080,19 @@ app.post('/api/editarConvidado', async (req, res) => {
       );
 
       res.status(200).json({ sucesso: true });
-      try {
-        await transporter.sendMail({
-          from: `"João Pedro - Sistema" <${process.env.EMAIL_USER}>`,
-          to: "joaopedrovsilva102@gmail.com",
-          subject: "Edição de convidado realizada",
-          html: `
-            <p>O convidado <strong>${nome}</strong> foi editado.</p>
-            <ul>
-              <li>Telefone: ${telefone}</li>
-              <li>Código Convite: ${codigoConvite}</li>
-              <li>${crianca ? 'Criança' : 'Adulto'}${idade ? ` (${idade} anos)` : ''}</li>
-            </ul>
-          `
-        });
-      } catch (error) {
-        console.error("Erro ao enviar email:", error);
-      }
+      safeSendMail({
+        from: `"João Pedro - Sistema" <${process.env.EMAIL_USER}>`,
+        to: "joaopedrovsilva102@gmail.com",
+        subject: "Edição de convidado realizada",
+        html: `
+          <p>O convidado <strong>${nome}</strong> foi editado.</p>
+          <ul>
+            <li>Telefone: ${telefone}</li>
+            <li>Código Convite: ${codigoConvite}</li>
+            <li>${crianca ? 'Criança' : 'Adulto'}${idade ? ` (${idade} anos)` : ''}</li>
+          </ul>
+        `
+      });
     } catch (err) {
       console.error('Erro ao editar convidado:', err);
       res.status(500).json({ erro: 'Erro ao editar convidado.' });
