@@ -1080,19 +1080,19 @@ app.post('/api/editarConvidado', async (req, res) => {
       );
 
       res.status(200).json({ sucesso: true });
-      safeSendMail({
-        from: `"João Pedro - Sistema" <${process.env.EMAIL_USER}>`,
-        to: "joaopedrovsilva102@gmail.com",
-        subject: "Edição de convidado realizada",
-        html: `
-          <p>O convidado <strong>${nome}</strong> foi editado.</p>
-          <ul>
-            <li>Telefone: ${telefone}</li>
-            <li>Código Convite: ${codigoConvite}</li>
-            <li>${crianca ? 'Criança' : 'Adulto'}${idade ? ` (${idade} anos)` : ''}</li>
-          </ul>
-        `
-      });
+      // safeSendMail({
+      //   from: `"João Pedro - Sistema" <${process.env.EMAIL_USER}>`,
+      //   to: "joaopedrovsilva102@gmail.com",
+      //   subject: "Edição de convidado realizada",
+      //   html: `
+      //     <p>O convidado <strong>${nome}</strong> foi editado.</p>
+      //     <ul>
+      //       <li>Telefone: ${telefone}</li>
+      //       <li>Código Convite: ${codigoConvite}</li>
+      //       <li>${crianca ? 'Criança' : 'Adulto'}${idade ? ` (${idade} anos)` : ''}</li>
+      //     </ul>
+      //   `
+      // });
     } catch (err) {
       console.error('Erro ao editar convidado:', err);
       res.status(500).json({ erro: 'Erro ao editar convidado.' });
